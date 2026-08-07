@@ -2,9 +2,10 @@
 
 Sampling scales. Selection does not.
 
-An interactive page on what 383,000 DockQ-labelled samples say about scaling the number of
-generated structures in antibody-antigen co-folding: four architecturally independent predictors,
-161 targets, up to 256 samples per target, every sample scored against the crystal structure.
+An interactive page on what 162,000 DockQ-labelled samples say about scaling the number of
+generated structures in antibody-antigen co-folding: four independently trained predictors —
+three AF3-style co-folders and one single-sequence folder — on a 161-target panel, up to 256
+samples per target, every sample scored against the experimental structure.
 
 **Read it: https://moritztng.github.io/abag-scaling/**
 

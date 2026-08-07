@@ -1,8 +1,22 @@
-# AbAg-XM deep-N: what 383,000 labelled samples say about sampling and selection
+# AbAg-XM deep-N: what 162,000 labelled samples say about sampling and selection
 
-Analysis of the AbAg-XM deep-N asset (four architecturally independent structure predictors,
-161 antibody-antigen targets, N up to 256 samples per target, every sample DockQ-labelled).
-Source data is frozen and unmodified; this document is the technical backing for the site.
+Analysis of the AbAg-XM deep-N asset (four independently trained structure predictors --
+boltz2, opendde-abag and protenix-v2 are AF3-style all-atom diffusion co-folders, esmfold2 is a
+single-sequence folder -- on a 161-target antibody-antigen panel, N up to 256 samples per target,
+every sample DockQ-labelled). Source data is frozen and unmodified; this document is the
+technical backing for the site.
+
+**Sample counts.** The analysed pools hold **161,792** samples (632 target-model pairs x 256).
+The four packaged parquets total 382,912 rows, but rungs nest, so the same physical structure
+appears once per rung label it belongs to; distinct DockQ-labelled structures in the asset are
+**213,616**. Any "383,000 samples" statement is a row count, not a sample count, and is wrong.
+
+**Data cut-off: 2026-08-06 23:16 UTC** (end of Galaxy window p29). Six 64-sample chunks completed
+after the freeze and are not in the analysis; a later cut would complete boltz2/9ua5 and
+opendde-abag/9rye and 9xqn. Three added targets on a 153-160 panel of bounded per-target means
+move a mean by at most 0.02 in the worst case, an order of magnitude inside the CIs here.
+opendde-abag/9gvn c2 and protenix-v2/9d73 c0 never succeeded on any attempt, so those two remain
+permanently short rather than pending.
 
 Reproduce every number:
 
@@ -125,7 +139,7 @@ confidence and target-mean DockQ.
 | esmfold2 | plddt (its selector) | +0.086 | +0.116 [+0.069, +0.165] | 0.681 |
 | esmfold2 | ptm | +0.153 | +0.179 [+0.131, +0.228] | 0.788 |
 
-Across-target correlation is 0.54 to 0.79 everywhere. Within-target correlation is 0.03 to 0.19.
+Across-target correlation is 0.54 to 0.79 everywhere. Within-target correlation is 0.03 to 0.18.
 The scores are informative about problem difficulty and near-uninformative about which of their
 own samples to hand over.
 
@@ -165,8 +179,15 @@ then one of three states.
 
 Median max-EJ over the whole pool, unsolved vs solved targets: boltz2 0.318 vs 0.826,
 opendde-abag 0.403 vs 0.867, protenix-v2 0.400 vs 0.862, esmfold2 0.264 vs 0.866. The separation
-is clean on all four. Two thirds to four fifths of all failures are targets where no sample ever
-lands on the right epitope.
+is clean on all four -- and it needs no threshold, which the counted fraction below does.
+
+**64% to 78% of all failures are targets where no sample ever lands on the right epitope**, at
+the shared cut EJ* = 0.558 (the median of the four per-model histogram troughs). That count moves
+with the cut, so the sweep is published rather than hidden: across cuts spanning the per-model
+troughs (0.458 to 0.625) the fraction runs 53% to 81%; over the wider grid 0.30 to 0.80 it runs
+31% to 84%. The threshold-free statement above -- median best-in-pool epitope overlap 0.26-0.40
+on unsolved targets against 0.83-0.87 on solved ones -- carries the finding without the knob, and
+is what the site leads with.
 
 **Does depth buy site discovery?** Less than it buys pose quality. Over k = 1 to 256 (boltz2):
 P(at least one sample finds the site) 0.409 → 0.544, a 33% relative gain, while P(at least one
@@ -185,8 +206,19 @@ threshold-crossing rates, not in a plateau of the mean. Reported as measured.
 chunks, so those two are analysed at their deepest chunk-aligned depth covering ≥100 targets
 (128 and 64) and are never quoted at N=256. Missingness is chunk-aligned rather than per-sample,
 and DockQ means are close between labelled and unlabelled samples (protenix-v2 0.294 vs 0.300),
-so it is a scorer-coverage gap and not informative missingness. Partial coverage can only
-under-count site discovery, so "never finds the site" is a conservative count for those two.
+so it is a scorer-coverage gap and not informative missingness.
+
+**The direction of that bias, stated correctly.** Partial coverage can only under-count site
+*discovery*: a sample that did find the site but carries no EJ label is unseen, so its target is
+counted as "never finds the site". The fraction is therefore **inflated** for protenix-v2 and
+esmfold2, not conservative -- and those two carry the two highest fractions (78%, 71%), which is
+exactly what the bias would produce. An earlier draft of this document called it conservative;
+that was backwards.
+
+The control bounds it. Re-scoring the two *completely* labelled models at the partial models'
+depths, keeping DockQ at full depth so the asymmetry is reproduced exactly: boltz2 0.687 at depth
+64, 128 and 256 alike; opendde-abag 0.667 / 0.667 / 0.639. So depth moves the fraction by at most
+0.03, and protenix-v2's 0.78 is not explained by coverage.
 
 **Do the models fail on the same targets?** Partly. Pairwise Jaccard of failure sets ranges 0.21
 (opendde-abag vs esmfold2) to 0.56 (boltz2 vs esmfold2) — the two generic co-folders fail most
@@ -229,10 +261,46 @@ budget, on both metrics. The headline comparison:
 **Four models at 0.08 card-h/target — 11.9 samples in total, about 3 per model — reach DockQ ≥
 0.23 on 0.783 [0.719, 0.843] of targets. The best single model at 2.5 card-h/target, 31x the
 compute and 233.8 samples, reaches 0.760 [0.692, 0.826].** Oracle mean DockQ over the same
-comparison: 0.598 [0.549, 0.647] vs 0.610 [0.559, 0.662] — the twelve mixed samples match 234
-deep ones on mean quality and beat them on solve rate.
+comparison: 0.598 [0.549, 0.647] vs 0.610 [0.559, 0.662].
 
-Model diversity is worth roughly 30x its cost in sampling depth.
+**Those two intervals overlap, so read the paired difference, not the two intervals.** The
+bootstrap is paired, so the difference is computable, and it does not support a "beats" claim at
+this budget:
+
+| union@0.08 − best-single@2.5 | paired difference |
+|---|---|
+| solve rate (DockQ ≥ 0.23) | +0.0233 [-0.0292, +0.0769] — crosses zero |
+| oracle mean DockQ | -0.0123 [-0.0430, +0.0206] — crosses zero |
+
+At 1/31 the compute the four-way split **draws level** with the deep single model; it does not
+beat it. An earlier draft said "beat them on solve rate", which the paired interval does not
+license. The split does overtake the deep single model, on both metrics with intervals excluding
+zero, from **0.3 card-h/target** — 1/8 the compute:
+
+| union@0.3 − best-single@2.5 | paired difference |
+|---|---|
+| solve rate | +0.0738 [+0.0239, +0.1261] |
+| oracle mean DockQ | +0.0353 [+0.0044, +0.0685] |
+
+**The equal-budget comparison is the strong one, and it is unambiguous.** At the same 0.08
+card-h/target, the four-way split beats every single model on both metrics, every interval
+excluding zero — including against the antibody specialist:
+
+| union@0.08 − single@0.08 | solve rate | oracle mean DockQ |
+|---|---|---|
+| vs boltz2 | +0.3336 [+0.2606, +0.4076] | +0.2658 [+0.2186, +0.3143] |
+| vs opendde-abag | +0.0699 [+0.0272, +0.1153] | +0.0444 [+0.0174, +0.0741] |
+| vs protenix-v2 | +0.2403 [+0.1807, +0.3017] | +0.2127 [+0.1684, +0.2583] |
+| vs esmfold2 | +0.3677 [+0.2918, +0.4449] | +0.2691 [+0.2164, +0.3224] |
+
+Every one of these still excludes zero at 0.15, 0.5, 1.0 and 2.5 card-h/target.
+
+**The budget ladder starts at 0.04, not 0.02.** At 0.02 card-h/target an even four-way split buys
+1.4 samples in total and 49 of the 151 targets receive none, so the union strategy is undefined
+there and its point estimate was a `nanmean` over 102 targets while every other line ran on 151.
+That produced the visible dip where the four-way line started below opendde-abag and crossed it.
+Dropping a budget at which the strategy does not exist is not a selection of the favourable
+range; every strategy is defined at every remaining budget.
 
 **The specialisation claim, verified.** opendde-abag alone at 0.08 card-h/target (9.8 samples)
 scores oracle 0.554, well above boltz2 at 2.5 card-h/target (255.3 samples, 0.426) at 31x less
@@ -351,11 +419,30 @@ different samples from the pool, and no available signal tells you which.
 ## Limitations
 
 - **161 of 164 targets.** 9ly2 / 9ly3 / 9lz2 are 3-way Ab:Ag hetero-hexamers that the DockQ
-  scorer's interface model does not support. After dropping short top rungs, per-model target
-  counts are 153 to 160; the four-model common set is 151.
-- **Hardware exclusions.** opendde-abag drops 9i3p / 9ivj / 9j4c / 9q7y and protenix-v2 /
-  esmfold2 drop 9j4c on the Wormhole Galaxy, all measured DRAM capacity boundaries. None carries
-  to Blackhole.
+  scorer's interface model does not support, so they carry no DockQ labels at all. Per-model
+  counts are 153 to 160; the four-model common set is 151. The counts differ for **three**
+  distinct reasons, none of them a modelling or biology decision, and the arithmetic closes
+  exactly:
+
+  | model | analysed | 161 scorable minus |
+  |---|---|---|
+  | boltz2 | 160 | 1 short rung (9ua5) |
+  | opendde-abag | 153 | 4 DRAM (9i3p, 9ivj, 9j4c, 9q7y) + 1 mis-fold (9sbb) + 3 short (9rye, 9gvn, 9xqn) |
+  | protenix-v2 | 159 | 1 DRAM (9j4c) + 1 short (9d73) |
+  | esmfold2 | 160 | 1 DRAM (9j4c) |
+
+- **Hardware exclusions are an engineering boundary, never a scientific one.** opendde-abag drops
+  9i3p / 9ivj / 9j4c / 9q7y and protenix-v2 / esmfold2 drop 9j4c on the Wormhole Galaxy: measured
+  device-DRAM capacity boundaries at the padded token counts those targets need (pair and
+  triangle tensors scale as pad^2, which no MSA depth cap reduces). Decided before any structure
+  was scored, and none carries to Blackhole. boltz2 ran all 164.
+- **One further exclusion, opendde-abag/9sbb.** Its Galaxy rung-256 is complete in the fleet log
+  but is excluded from the analysis as a p2-era pipeline mis-fold: the Galaxy samples sit in a
+  ptm 0.668-0.697 basin while the same input refolded on Blackhole reaches ~0.91, giving DockQ
+  0.023 against 0.880 under the same fixed scorer. The model's own confidence condemns the Galaxy
+  fold, so this is not a quality-based cherry-pick. A prevalence scan over 41 paired targets found
+  it the only such case (next worst |delta| < 0.2). Without this exclusion the stated per-model
+  arithmetic does not close: 161 - 4 - 3 = 154, not 153.
 - **Epitope and CDR labels are chunk-partial** for protenix-v2 and esmfold2 (Q3, Q7 run at
   reduced depth there and say so).
 - **N* = 256 is a decision cap, not a measured knee.** Three of four models were still gaining
@@ -370,9 +457,14 @@ different samples from the pool, and no available signal tells you which.
   Wormhole/Blackhole difference is chaotic amplification of reduction-order numerics, reproduced
   on-Galaxy by an mps 1→5 control.
 - **Q6 extrapolates far past the measured range**, under a fit family that assumes no ceiling.
-- **Not a published-ranker benchmark.** This measures each model's own shipped confidence, not
-  ipSAE / pDockQ2 / AntiConf / DeepRank-Ab / ABAG-Rank, which need PAE matrices this asset does
-  not carry. Whether a learned ranker closes the gap is untested here.
+- **Not a published-ranker benchmark**, for two different reasons that an earlier draft merged
+  into one. The **PAE-derived** scores — pDockQ2, ipSAE, and AntiConf, which is built on pTM plus
+  pDockQ2 and so inherits the requirement — genuinely cannot be computed from this asset: PAE was
+  not written (every `labels.json` carries `pae_metrics: {"_skipped": "pae=False ptm=True"}`).
+  The **learned rankers** — DeepRank-Ab, a geometric-deep-learning scoring function over the 3D
+  structures, and ABAG-Rank, a learning-to-rank model — need no PAE and could have been run
+  against these pools. They were not. Saying they "need PAE" is wrong. Whether a learned ranker
+  closes the gap is untested here.
 
 ## Prior work, and what this adds
 
@@ -380,13 +472,14 @@ The headline direction is **not new and must not be presented as new.** Publishe
 antibody-antigen complexes already reports both halves of it:
 
 - Zhu et al., *Evaluating deep learning based structure prediction methods on antibody-antigen
-  complexes* (Bioinformatics, 2026) reports that every method improves roughly linearly with
-  the logarithm of sample count -- AF3's best-of-N mean DockQ rising from below 0.3 to above
-  0.5 by 200 samples -- and names identifying the best model among the generated ones as the
-  crucial remaining bottleneck. That is Q1's direction and Q6's log-linear shape, already in
-  the literature.
+  complexes* (Bioinformatics, 2026; vol 42 issue 4, btag136) reports that every method improves
+  roughly linearly with the logarithm of sample count -- AF3's best-of-N mean DockQ rising from
+  below 0.3 to above 0.5 by 200 samples -- and names identifying the best model among the
+  generated ones as the crucial remaining bottleneck. That is Q1's direction and Q6's log-linear
+  shape, already in the literature. Their benchmark is **110** targets; this panel is 161.
 - The OpenDDE technical report gives ranked-vs-oracle gaps on its own benchmarks
-  (FoldBench-AB 70.0% ranked vs 81.9% oracle; 2026ARK-AB 66.4% vs 80.1%).
+  (FoldBench-AB 70.0% ranked vs 81.9% oracle; 2026ARK-AB 66.4% vs 80.1%), measured at its
+  **default N = 5**; this panel runs the same contrast out to N = 256.
 - Confidence-based ranking for these complexes has its own literature (AntiConf, pDockQ2,
   ipSAE, and learned rankers such as ABAG-Rank and DeepRank-Ab).
 - Smorodina & Greiff (2026) show co-folding confidence is near-random at separating cognate
@@ -397,18 +490,26 @@ Against that baseline, what this asset supports that those do not:
 
 1. **The gap expressed as an effective N.** Inverting the oracle curve at the delivered
    accuracy turns "there is a gap" into "256 samples plus the model's own confidence is worth
-   1 to 2 samples chosen perfectly", with intervals, on four models and three thresholds.
+   1 to 3 samples chosen perfectly", with intervals, on four models and three thresholds.
 2. **Within-target versus across-target ranking, separated.** The same score scores 0.54-0.79
-   across targets and 0.03-0.19 within one. This locates the failure precisely rather than
+   across targets and 0.03-0.18 within one. This locates the failure precisely rather than
    reporting an aggregate ranking deficit.
-3. **A mechanism for the failures.** Two thirds to four fifths of all failures never place a
-   sample on the right epitope, so most of the missing accuracy is not a ranking problem at
-   all and no selector could recover it.
+3. **A mechanism for the failures.** 64% to 78% of all failures never place a sample on the
+   right epitope, so most of the missing accuracy is not a ranking problem at all and no
+   selector could recover it.
 4. **Diversity priced against depth at measured compute.** Card-hour-matched, four models at
-   about twelve samples total match the best single model at 234 samples.
+   about twelve samples total draw level with the best single model at 234 samples, and beat
+   every single model at the same spend.
 5. **A pre-declared null on fixing selection with what is already there.** Six candidate
    selectors, fixed in advance, none of which beats the shipped selector on any model.
 
-Points 1-5 are what needs this asset -- four architecturally independent generators, N to 256,
-383,000 DockQ-labelled samples, one panel of 161 targets throughout. The scale is the enabler,
+Points 1-5 are what needs this asset -- four independently trained generators, N to 256, 161,792
+DockQ-labelled samples analysed, one panel of 161 targets throughout. The scale is the enabler,
 not the claim.
+
+**How independent are the four, really?** Three of them (boltz2, opendde-abag, protenix-v2) are
+AF3-style all-atom diffusion co-folders trained largely on the PDB; only esmfold2 is a different
+kind of model. Calling them "architecturally independent" -- as an earlier draft did -- overstates
+it. The measured independence is partial and is reported as such in Q3: pairwise failure-set
+Jaccard 0.21 to 0.56, and 10 of the 117 common targets are failed by all four. That partial
+independence is exactly what Q4's compute-split result trades on.

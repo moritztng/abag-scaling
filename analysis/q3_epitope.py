@@ -174,7 +174,7 @@ def _frac_no_site(model: str, ej_star: float, depth: int | None = None) -> float
     return float((bad & (mx_ej < ej_star)).sum() / bad.sum()) if bad.any() else None
 
 
-def sensitivity() -> dict:
+def sensitivity(ej_star: float) -> dict:
     """EJ* is a knob, so publish what the headline does as it moves.
 
     Two sweeps. `ej_star` walks the cut across and beyond the range of the four per-model
@@ -188,7 +188,7 @@ def sensitivity() -> dict:
         "ej_star_grid": EJ_STAR_GRID,
         "ej_star": {m: [_frac_no_site(m, e) for e in EJ_STAR_GRID] for m in core.MODELS},
         "depth_grid": DEPTH_GRID,
-        "depth_control": {m: [_frac_no_site(m, 0.558, d) for d in DEPTH_GRID]
+        "depth_control": {m: [_frac_no_site(m, ej_star, d) for d in DEPTH_GRID]
                           for m in ("boltz2", "opendde-abag")},
     }
 
@@ -200,7 +200,7 @@ def run() -> dict:
     ej_star = float(np.median([thr[m]["trough"] for m in core.MODELS]))
     res = {m: analyse(m, ej_star) for m in core.MODELS}
     return {"ej_star": ej_star, "ej_hist": thr, "per_model": res,
-            "sensitivity": sensitivity(), "cross_model": cross_model(res)}
+            "sensitivity": sensitivity(ej_star), "cross_model": cross_model(res)}
 
 
 if __name__ == "__main__":

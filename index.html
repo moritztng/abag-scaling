@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sampling scales. Selection does not. — AbAg-XM deep-N</title>
-<meta name="description" content="383,000 DockQ-labelled antibody-antigen samples from four independent structure predictors. Sampling 256 times and trusting the model's confidence delivers what a perfect selector gets from two samples.">
+<meta name="description" content="162,000 DockQ-labelled antibody-antigen samples from four structure predictors. Sampling 256 times and trusting the model's own confidence delivers what a perfect chooser would get from one to three samples.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fragment+Mono&display=swap" rel="stylesheet">
@@ -228,14 +228,17 @@ select {
 <div class="wrap">
 
 <div class="hero">
-  <p class="kicker">383,000 labelled samples · 4 models · 161 antibody–antigen targets</p>
+  <p class="kicker"><span id="k-samples">–</span> labelled samples · 4 models · 161-target
+  antibody–antigen panel</p>
   <h1>Sampling raises the ceiling. Nobody reaches it.</h1>
-  <p class="lede">Draw 256 structures for one antibody–antigen complex and the best of them is
-  far better than the first. Ask the model which one to keep and it hands you
-  <b>what a perfect chooser would have found in roughly two draws</b>. Every model. Every threshold.</p>
+  <p class="lede">Draw 256 structures for one antibody–antigen complex and the best of them beats
+  the first by a wide margin. Ask the model which one to keep and it hands you <b>what a perfect
+  chooser would have found in one to three draws</b>. Every model, at every quality bar we tested.
+  Accuracy is DockQ: 0 to 1 agreement with the experimentally solved structure, where <b>0.23</b>
+  is the community's <i>acceptable</i> bar and 0.8 is near-perfect.</p>
 
   <div class="tiles">
-    <div class="tile"><div class="n" id="t-neff">–</div><div class="l">samples' worth of accuracy delivered, out of 256 drawn</div></div>
+    <div class="tile"><div class="n" id="t-neff">–</div><div class="l">samples' worth of mean DockQ delivered, out of 256 drawn</div></div>
     <div class="tile"><div class="n" id="t-rho">–</div><div class="l">rank correlation between a model's confidence and its own samples' accuracy</div></div>
     <div class="tile"><div class="n" id="t-div">–</div><div class="l">less compute for four models to match the best single model at full depth</div></div>
   </div>
@@ -244,7 +247,9 @@ select {
 <section id="gap">
   <h2>The gap does not close. It widens.</h2>
   <p>Solid = the best sample in the pool. Dashed = the one the model's own confidence hands
-  you. More sampling lifts the ceiling on every model; the delivered line is flat.</p>
+  you. More sampling lifts the ceiling on every model; the delivered line is flat. The distance
+  between them is <b><span id="gapwiden">–</span> DockQ wider at 256 samples than at 16</b>,
+  every model's 95% interval excluding zero.</p>
   <div class="card">
     <div class="ctl">
       <div class="seg" id="metric-seg"></div>
@@ -257,32 +262,40 @@ select {
 
 <section id="neff">
   <h2>256 samples in, 2 samples out.</h2>
-  <p>Invert the ceiling curve at the accuracy actually delivered: 256 samples plus the model's
-  own confidence is worth <b>1 to 2 samples</b> picked perfectly. The bar is the estimate, the
-  line its 95% interval — the upper bound never reaches 15.</p>
+  <p>Read the ceiling curve backwards: how many samples would a perfect chooser have needed to
+  reach the accuracy the model actually delivers from 256? The answer is <b>1 to 3</b>, whether
+  you score mean DockQ or count the targets clearing a quality bar. The bar is the estimate, the
+  line its 95% interval — even the widest interval tops out under 15 of the 256.</p>
   <div class="card">
     <div class="figwrap"><div id="c-neff"></div><div class="tip" id="tip-neff"></div></div>
     <div class="legend" id="lg-neff"></div>
+    <p class="foot" id="neff-foot"></p>
   </div>
 </section>
 
 <section id="conf">
   <h2>Confidence knows which target is easy. Not which sample is right.</h2>
-  <p>The same score, correlated two ways. Across targets it works. Within a target's 256
-  samples it is near zero — including <span class="mono">ipTM</span>, the score the field uses
-  for interfaces.</p>
+  <p>The same score, correlated two ways. Across targets it works: a model knows which complexes
+  it will fold well. Within one target's 256 samples it is near zero — including <span
+  class="mono">ipTM</span>, the model's own confidence in the interface and the score the field
+  ranks antibody–antigen poses with.</p>
   <div class="card">
     <div class="figwrap"><div id="c-conf"></div><div class="tip" id="tip-conf"></div></div>
     <div class="legend" id="lg-conf"></div>
+    <p class="foot">This run recorded only pTM and the ranking score for ESMFold2, so it has no
+    ipTM row; its ranking score is mean pLDDT. For the other three the shipped selector is
+    exactly their <span class="mono">confidence_score</span>.</p>
     <details><summary>Table</summary><div id="tb-conf"></div></details>
   </div>
 </section>
 
 <section id="epi">
-  <h2>Two thirds of failures never find the epitope.</h2>
-  <p>Split every target by what went wrong. Most failures are not near-misses: no sample in 256
-  ever lands on the right binding site. Sampling refines poses far faster than it discovers
-  sites.</p>
+  <h2>Most failures never find the epitope.</h2>
+  <p>The epitope is the patch on the antigen the antibody actually binds. Split every target by
+  what went wrong and the failures are not near-misses: on a target a model fails, its best
+  sample overlaps the true epitope by a median of <b><span id="epi-uns">–</span></b>, against
+  <b><span id="epi-sol">–</span></b> on one it solves. Two clean modes, almost nothing between
+  them. Sampling refines poses far faster than it discovers sites.</p>
   <div class="card">
     <div class="figwrap"><div id="c-epi"></div><div class="tip" id="tip-epi"></div></div>
     <div class="legend" id="lg-epi"></div>
@@ -293,22 +306,27 @@ select {
 <section id="beat">
   <h2>We tried to beat it. Nothing did.</h2>
   <p>Six alternative selectors, fixed in advance, each built only from numbers a model already
-  returns — so you could use any of them today, with no ground truth. Every one is level with
-  the shipped selector or worse. The bar was set before running them: beat the baseline with an
-  interval excluding zero on at least two of the four models. <b>Nothing came close.</b></p>
+  returns — so you could use any of them today, with no ground truth. The bar was set before
+  running them: beat the shipped selector with an interval excluding zero on at least two of the
+  four models. <b>Every one lands level with it or worse.</b></p>
   <div class="card">
     <div class="figwrap"><div id="c-beat"></div><div class="tip" id="tip-beat"></div></div>
     <div class="legend" id="lg-beat"></div>
-    <p class="foot">Structural consensus — ranking samples by agreement with the pool's modal
-    pose — needs the structures themselves and is not tested here.</p>
+    <p class="foot">Combinations average each sample's rank under the listed scores. Structural
+    consensus — ranking samples by agreement with the pool's modal pose — needs the structures
+    themselves and is not tested here.</p>
   </div>
 </section>
 
 <section id="pareto">
   <h2>Spend compute on different models, not on more samples.</h2>
   <p>Same card-hours per target, split four ways instead of poured into one model. Drag the
-  budget: from a twelfth of a card-hour upward the four-way split beats every single model, and
-  it beats the best of them running <span class="xfold">31×</span> longer.</p>
+  budget: from 0.08 card-hours per target — about twelve samples — the four-way split beats every
+  single model at the same spend, including the antibody specialist
+  (<span id="pw-od">–</span> more targets solved, paired 95% interval excluding zero). Against the
+  best single model run at the full <span class="xfold">31×</span> the compute it draws level;
+  it overtakes it from <span id="pw-beat">–</span> card-hours per target, about
+  <span id="pw-ratio">–</span> that spend.</p>
   <div class="card">
     <div class="ctl">
       <label for="budget">Budget</label>
@@ -347,45 +365,93 @@ select {
 
 <div class="notes">
   <h3>What this is</h3>
-  <p>Four architecturally independent predictors — Boltz-2, OpenDDE-abag, Protenix-v2 and
-  ESMFold2 — each sampled to 256 structures on all 161 scorable targets of the AbAg-XM panel,
-  every structure scored with DockQ against the experimental reference. 383,000 labelled
-  samples on one panel, folded on Tenstorrent Wormhole Galaxy hardware.</p>
-  <p>Curves are exact, not simulated: the probability that a given sample is the top-ranked
-  member of a random k-subset has a closed form, so every point is computed rather than drawn.
+  <p>Four independently trained predictors — Boltz-2, OpenDDE-abag and Protenix-v2, which are
+  AF3-style all-atom diffusion co-folders, plus ESMFold2, a single-sequence folder — each sampled
+  to 256 structures per target on the AbAg-XM panel, every structure scored with DockQ against
+  the experimental reference. <span id="n-samples">–</span> labelled samples, folded on
+  Tenstorrent Wormhole Galaxy hardware.</p>
+  <p>They are not four views of the same model, and they do not fail on the same targets: the
+  pairwise overlap of their failure sets is <span id="n-jac">–</span> (Jaccard), and
+  <span id="n-allfail">–</span> targets are failed by all four. That partial independence is what
+  the compute-split section buys.</p>
+  <p>Curves are exact, not simulated: every point is computed in closed form rather than drawn.
   Intervals are a 20,000-resample paired bootstrap over targets.</p>
 
   <h3>Prior work</h3>
   <p>That deep sampling raises the ceiling faster than confidence ranking delivers is
-  <b>already published</b> for antibody–antigen complexes, and is not claimed as new here.
-  What this panel adds is the gap expressed as an effective N, the split of ranking failure
-  into within-target and across-target, the finding that most failures are epitope-level, the
-  price of model diversity against sampling depth at measured compute, and a pre-declared null
-  on fixing selection with the scores already available. The findings document names the prior
-  work directly.</p>
+  <b>already published</b> for antibody–antigen complexes and is not claimed as new here. Zhu et
+  al. (<i>Bioinformatics</i> 2026) report best-of-N mean DockQ rising from below 0.3 to above 0.5
+  by 200 samples across 110 targets, and name identifying the best generated model as the
+  remaining bottleneck. OpenDDE's own technical report measures the same ranked-versus-oracle gap
+  at its default N = 5.</p>
+  <p>What this panel adds is that gap expressed as an effective N, the split of ranking failure
+  into within-target and across-target, the finding that most failures are epitope-level rather
+  than pose-level, the price of model diversity against sampling depth at measured compute, and a
+  pre-declared null on fixing selection with the scores a model already returns.</p>
 
   <h3>Limitations</h3>
   <ul>
-    <li>161 of 164 targets. Three are three-way hetero-hexamers the DockQ scorer does not
-    support; per-model counts after dropping short pools are 153–160.</li>
+    <li><b>161 of the 164 panel targets are scorable.</b> Three (9ly2, 9ly3, 9lz2) are three-way
+    antibody–antigen hetero-hexamers the DockQ scorer's interface model does not support, so they
+    carry no labels at all. Per-model counts are lower again, for three separate reasons, none of
+    them a modelling or biology decision: <span id="lim-panel">–</span></li>
+    <li><b>What those three reasons are.</b> <i>Device memory</i> — four targets exceed the
+    32-chip Galaxy's per-chip DRAM at the padded token counts they need, and were dropped before
+    any structure was scored. <i>Short pool</i> — the target's 256-sample run never finished all
+    four 64-sample chunks. <i>Mis-fold</i> — one target, OpenDDE-abag on 9sbb, folds into a
+    pTM 0.67–0.70 basin on the Galaxy against 0.91 for the same input refolded on Blackhole
+    (DockQ 0.02 against 0.88 under the same scorer); a scan of 41 paired targets found it the
+    only such case.</li>
+    <li><b>Data cut-off <span id="lim-cutoff">–</span>.</b> Six 64-sample chunks finished after
+    the freeze and are not in the analysis; a later cut would complete three more targets. Three
+    targets added to a 153–160 panel of bounded per-target means can move a mean by at most 0.02
+    in the worst case, an order of magnitude inside the intervals here.</li>
     <li><b>N = 256 is a decision cap, not a measured knee.</b> Three of four models were still
     gaining at the cap. Nothing here says sampling saturates.</li>
-    <li>Epitope and CDR labels are partial for Protenix-v2 and ESMFold2; those two are analysed
-    at reduced depth and never quoted at 256.</li>
-    <li>Four specific models at specific settings. ESMFold2 runs single-sequence; OpenDDE-abag
-    is antibody-specialised, so its lead is not a general co-folding result.</li>
-    <li>This measures each model's own shipped confidence, not published rankers
-    (ipSAE, pDockQ2, AntiConf, DeepRank-Ab), which need PAE matrices this data does not carry.
-    Whether a learned ranker closes the gap is untested here.</li>
-    <li>Forecasts beyond 256 samples are extrapolations under a no-ceiling fit, so they are
-    optimistic.</li>
+    <li>Epitope and CDR labels are partial for Protenix-v2 and ESMFold2. The epitope chart states
+    its own n and label depth; shallower labels can only inflate a model's "never finds the site"
+    share, and the control on that chart bounds the effect.</li>
+    <li>Four specific models at specific settings. ESMFold2 runs single-sequence; OpenDDE-abag is
+    antibody-specialised, so its lead is not a general co-folding result.</li>
+    <li>This measures each model's own shipped confidence, not published rankers. The PAE-based
+    scores (pDockQ2, ipSAE, and AntiConf, which builds on pDockQ2) cannot be computed here at all
+    — PAE matrices were not written during the campaign. Learned rankers that score structures
+    directly (DeepRank-Ab, ABAG-Rank) could have been run and were not. Whether a learned ranker
+    closes the gap is untested here.</li>
   </ul>
 
   <h3>Reproduce</h3>
-  <p class="mono">python3 analysis/build_insights.py -o data/insights.json</p>
-  <p>Every number on this page is read from the file that command writes. Full statistics,
-  every interval, every control and the complete limitations section are in
-  <a href="https://github.com/moritztng/abag-scaling/blob/main/FINDINGS.md">the findings document</a>.</p>
+  <ul>
+    <li><b>Models</b> — Boltz-2, OpenDDE-abag, Protenix-v2, ESMFold2 as shipped in tt-bio at
+    commit <span class="mono">6d352084c</span>, stock checkpoints, inference only.</li>
+    <li><b>Targets</b> — the AbAg-XM panel, 164 antibody–antigen complexes, 161 of them scorable,
+    each with an experimentally solved reference.</li>
+    <li><b>Depth and seeds</b> — 256 samples per target per model, run as four 64-sample chunks.
+    Base seed 40000 Boltz-2, 20000 OpenDDE-abag, 30000 Protenix-v2, 50000 ESMFold2; chunk
+    <i>j</i> uses base + 1000·<i>j</i>, so the shallower rungs are exact prefixes of the deeper
+    ones.</li>
+    <li><b>Settings</b> — the three co-folders fold with MSAs served from a precomputed cache
+    (<span class="mono">--msa_cache_only --max_parallel_samples 5</span>, Boltz-2 8); ESMFold2 is
+    single-sequence (<span class="mono">--single_sequence --recycling_steps 10 --sampling_steps
+    100</span>); <span class="mono">--host_threads 8</span> throughout. Everything else as
+    shipped by each model.</li>
+    <li><b>Hardware and cost</b> — one 32-chip Tenstorrent Wormhole Galaxy. Card-hours are
+    measured, not modelled: <span id="rep-cost">–</span> per sample.</li>
+    <li><b>Metrics</b> — DockQ against the reference, 0 to 1. <i>Best</i> is the highest-DockQ
+    structure in the pool, what a perfect chooser would return; <i>delivered</i> is the one the
+    model's own selector ranks first (<span class="mono">confidence_score</span>, mean pLDDT for
+    ESMFold2). <i>Epitope overlap</i> is the Jaccard index of predicted against true antigen
+    contact residues. <i>Effective N</i> is where the best-of-k curve crosses the delivered
+    level.</li>
+    <li><b>Run it</b> — <span class="mono">python3 analysis/build_insights.py -o
+    data/insights.json</span> rebuilds every number on this page from the per-sample table (one
+    row per structure with its DockQ, confidence and epitope labels). Publishing that table is a
+    separate decision; the aggregates this page reads are committed in
+    <span class="mono">data/insights.json</span>.</li>
+  </ul>
+  <p>Full statistics, every interval and every control are in
+  <a href="https://github.com/moritztng/abag-scaling/blob/main/FINDINGS.md">the findings
+  document</a>.</p>
   <p class="mono" id="stamp" style="color:var(--muted-2)"></p>
 </div>
 
@@ -437,8 +503,14 @@ function xticks(f, sc, ticks, fm = (v => v)) {
 function axlabel(f, text, where) {
   const t = el('text', { class: 'axlabel' }, f.svg);
   t.textContent = text;
-  if (where === 'x') { t.setAttribute('x', f.ml + f.iw / 2); t.setAttribute('y', f.h - 1);
-    t.setAttribute('text-anchor', 'middle'); }
+  if (where === 'x') {
+    t.setAttribute('y', f.h - 1); t.setAttribute('text-anchor', 'middle');
+    // Centre under the plot area, but never off the edge -- a wide label gutter pushes the
+    // midpoint right far enough to crop the label on a phone.
+    const tw = t.getComputedTextLength ? t.getComputedTextLength() : 0;
+    t.setAttribute('x', tw ? Math.max(tw / 2 + 2, Math.min(f.w - tw / 2 - 2, f.ml + f.iw / 2))
+      : f.ml + f.iw / 2);
+  }
   else { t.setAttribute('transform', `translate(11,${f.mt + f.ih / 2}) rotate(-90)`);
     t.setAttribute('text-anchor', 'middle'); }
 }
@@ -459,6 +531,12 @@ function declutter(items, gap) {
   for (let i = 1; i < a.length; i++)
     if (a[i].y - a[i - 1].y < gap) a[i].y = a[i - 1].y + gap;
   return a;
+}
+// Row charts label every row on the left. Sizing that gutter by hand silently clips the longest
+// label at some widths, so derive it from the labels themselves.
+function labelMargin(labels, fontSize, cap) {
+  const w = Math.max(...labels.map(s => s.length)) * fontSize * 0.55;
+  return Math.min(cap, Math.ceil(w) + 14);
 }
 function legend(host, items) {
   host.innerHTML = items.map(i =>
@@ -593,8 +671,10 @@ function drawNeff() {
   });
   const maxv = Math.max(...rows.map(r => r.d.hi), 16);
   const narrow = window.innerWidth < 620;
-  const f = frame(host, { h: 34 + rows.length * (narrow ? 22 : 26), ml: narrow ? 84 : 132,
-    mr: 42, mt: 8, mb: 26 });
+  const fs = narrow ? 10 : 11.5;
+  rows.forEach(r => r.text = (narrow ? SHORT[r.m] : LABEL[r.m]) + ' · ' + r.lab);
+  const f = frame(host, { h: 34 + rows.length * (narrow ? 22 : 26),
+    ml: labelMargin(rows.map(r => r.text), fs, narrow ? 132 : 190), mr: 42, mt: 8, mb: 26 });
   const bh = f.ih / rows.length;
   const x = v => f.ml + (v / maxv) * f.iw;
   const xt = [1, 4, 8, 16].filter(v => v <= maxv);
@@ -617,9 +697,9 @@ function drawNeff() {
       stroke: css('--ink'), 'stroke-width': 1.5, opacity: 0.55 }, f.svg));
     const lt = el('text', { x: f.ml - 8, y: cy + 3.5, 'text-anchor': 'end', class: 'axis' }, f.svg);
     lt.setAttribute('fill', css('--ink-soft'));
-    lt.style.fontSize = narrow ? '10px' : '11.5px';
+    lt.style.fontSize = fs + 'px';
     lt.style.fontFamily = 'var(--sans)';
-    lt.textContent = (narrow ? SHORT[r.m] : LABEL[r.m]) + ' · ' + r.lab;
+    lt.textContent = r.text;
     const vt = el('text', { x: Math.min(x(r.d.hi) + 7, f.w - 4), y: cy + 3.5,
       class: 'axis', 'text-anchor': x(r.d.hi) + 7 > f.w - 4 ? 'end' : 'start' }, f.svg);
     vt.setAttribute('fill', css('--muted')); vt.textContent = r.d.mean.toFixed(1);
@@ -633,6 +713,17 @@ function drawNeff() {
   });
   legend(document.getElementById('lg-neff'),
     MODELS.map((m, i) => ({ c: hue(i), t: LABEL[m] })));
+
+  // 1.0 is the floor of this measure, not a precise reading -- name the models sitting on it and
+  // why, so nobody reads the flat bar as an unusually confident result.
+  const floored = MODELS.filter(m => q[m].effective_n.mean <= 1.0001);
+  document.getElementById('neff-foot').textContent = floored.length
+    ? `1.0 is the floor: ${floored.map(m => LABEL[m]).join(' and ')} `
+      + `${floored.length > 1 ? 'deliver' : 'delivers'} from 256 samples `
+      + `what a single draw averages (${q[floored[0]].user.mean.slice(-1)[0].toFixed(3)} against `
+      + `${q[floored[0]].random_baseline.mean.toFixed(3)}), so the curve is already met at k = 1 `
+      + `and nothing below 1 is measurable.`
+    : '';
 }
 
 // ---------------------------------------------------------------- 3. confidence
@@ -648,8 +739,10 @@ function drawConf() {
     rows.push({ m, fl, within: v.within_target.median, across: v.across_target_mean_dockq });
   }));
   const narrow = window.innerWidth < 620;
-  const f = frame(host, { h: 40 + rows.length * (narrow ? 20 : 23), ml: narrow ? 98 : 140,
-    mr: 22, mt: 10, mb: 30 });
+  const fs = narrow ? 10 : 11.5;
+  rows.forEach(r => r.text = (narrow ? SHORT[r.m] : LABEL[r.m]) + ' · ' + FLL[r.fl]);
+  const f = frame(host, { h: 40 + rows.length * (narrow ? 20 : 23),
+    ml: labelMargin(rows.map(r => r.text), fs, narrow ? 132 : 190), mr: 22, mt: 10, mb: 30 });
   const bh = f.ih / rows.length;
   const x = v => f.ml + ((v + 0.1) / 1.0) * f.iw;   // domain -0.1 .. 0.9
   const g = el('g', { class: 'axis' }, f.svg);
@@ -671,8 +764,8 @@ function drawConf() {
     el('circle', { cx: x(r.across), cy, r: 4.5, fill: c }, f.svg);
     const lt = el('text', { x: f.ml - 8, y: cy + 3.5, 'text-anchor': 'end', class: 'axis' }, f.svg);
     lt.setAttribute('fill', css('--ink-soft'));
-    lt.style.fontSize = narrow ? '10px' : '11.5px'; lt.style.fontFamily = 'var(--sans)';
-    lt.textContent = (narrow ? SHORT[r.m] : LABEL[r.m]) + ' · ' + FLL[r.fl];
+    lt.style.fontSize = fs + 'px'; lt.style.fontFamily = 'var(--sans)';
+    lt.textContent = r.text;
     const hz = el('rect', { x: f.ml, y: cy - bh / 2, width: f.iw, height: bh,
       fill: 'transparent' }, f.svg);
     hz.addEventListener('pointerenter', () => tipAt(tip, wrap, x(r.across), cy - 56,
@@ -710,7 +803,7 @@ function drawEpi() {
     const t = el('text', { x: x(v), y: f.mt + f.ih + 16, 'text-anchor': 'middle' }, g);
     t.textContent = Math.round(v * 100) + '%';
   });
-  axlabel(f, 'share of targets', 'x');
+  axlabel(f, 'share of the targets carrying epitope labels', 'x');
 
   MODELS.forEach((m, mi) => {
     const st = q[m].states, tot = KEYS.reduce((a, k) => a + st[k.k], 0);
@@ -735,17 +828,44 @@ function drawEpi() {
       hz.addEventListener('pointerleave', () => tip.style.opacity = 0);
       acc += frac;
     });
-    const lt = el('text', { x: f.ml - 8, y: cy + 4, 'text-anchor': 'end', class: 'axis' }, f.svg);
+    // n on every row: Protenix-v2 and ESMFold2 carry epitope labels on fewer targets than the
+    // rest of the page uses, so the denominator has to be visible on the bar itself.
+    const lt = el('text', { x: f.ml - 8, y: cy - 1, 'text-anchor': 'end', class: 'axis' }, f.svg);
     lt.setAttribute('fill', css('--ink-soft'));
     lt.style.fontSize = narrow ? '10.5px' : '12px'; lt.style.fontFamily = 'var(--sans)';
     lt.textContent = narrow ? SHORT[m] : LABEL[m];
+    const nt = el('text', { x: f.ml - 8, y: cy + 12, 'text-anchor': 'end', class: 'axis' }, f.svg);
+    nt.setAttribute('fill', css('--muted'));
+    nt.style.fontSize = narrow ? '9.5px' : '10.5px';
+    nt.textContent = 'n = ' + tot;
   });
   legend(document.getElementById('lg-epi'), KEYS.map(k => ({ c: k.c(), t: k.t })));
-  // The bars are shares of ALL targets. The claim is about the failures alone, so say it.
-  document.getElementById('epi-foot').textContent = 'Counting only the targets that fail: '
-    + MODELS.map(m => `${SHORT[m]} ${Math.round(
-        100 * D.q3_epitope.per_model[m].f2.frac_failures_that_never_find_site)}%`).join(', ')
-    + ' never find the site.';
+
+  // Everything a reviewer needs to attack this chart, stated on the chart: the bars are shares
+  // of ALL labelled targets while the claim is about the failures alone; the count depends on
+  // where the cut between the two epitope-overlap modes is placed; and the two partial models
+  // are labelled shallower, which can only inflate their share.
+  const q3 = D.q3_epitope, sv = q3.sensitivity;
+  const pct = v => Math.round(100 * v);
+  const fails = MODELS.map(m => q3.per_model[m].f2.frac_failures_that_never_find_site);
+  const gi = sv.ej_star_grid.map((v, i) => i).filter(i =>
+    sv.ej_star_grid[i] >= 0.458 && sv.ej_star_grid[i] <= 0.625);
+  const band = MODELS.flatMap(m => gi.map(i => sv.ej_star[m][i]));
+  const dep = MODELS.map(m => {
+    const d = q3.per_model[m].per_target.map(r => r.ej_depth).sort((a, b) => a - b);
+    return `${SHORT[m]} ${d[d.length >> 1]}`;
+  }).join(', ');
+  const drift = Math.max(...Object.values(sv.depth_control).map(v =>
+    Math.max(...v.map(x => Math.abs(x - v[v.length - 1])))));
+  document.getElementById('epi-foot').textContent =
+    `Counting only the targets that fail, ${pct(Math.min(...fails))}–${pct(Math.max(...fails))}% `
+    + `never find the site. Where the cut between the two modes is placed matters: across cuts of `
+    + `${sv.ej_star_grid[gi[0]]}–${sv.ej_star_grid[gi[gi.length - 1]]} epitope overlap the share `
+    + `runs ${pct(Math.min(...band))}–${pct(Math.max(...band))}%. The chart uses one shared cut, `
+    + `${q3.ej_star.toFixed(2)}, the median of the four models' histogram troughs. `
+    + `Median labelled samples per target: ${dep} — the two shallower models can only be `
+    + `over-counted here, and truncating the two fully labelled models to those depths moves `
+    + `their share by at most ${drift.toFixed(2)}.`;
 }
 
 // ---------------------------------------------------------------- 4b. beat the selector
@@ -758,8 +878,15 @@ function drawBeat() {
     rows.push({ m, n, d: q[m].candidates[n].vs_baseline })));
   const lim = Math.max(0.02, ...rows.map(r => Math.max(Math.abs(r.d.lo[2]), Math.abs(r.d.hi[2]))));
   const narrow = window.innerWidth < 620;
-  const f = frame(host, { h: 40 + rows.length * (narrow ? 18 : 21), ml: narrow ? 106 : 176,
-    mr: 20, mt: 10, mb: 30 });
+  const fs = narrow ? 9.5 : 11;
+  const CAND = { 'ptm': 'pTM', 'iptm': 'ipTM', 'complex_plddt': 'pLDDT',
+    'rank_mean(iptm, plddt)': 'ipTM + pLDDT', 'rank_mean(ptm, iptm, plddt)': 'pTM + ipTM + pLDDT',
+    'rank_mean(all flavours)': 'all scores' };
+  // On a phone the model name costs more width than it carries -- colour and the legend already
+  // say which model a row belongs to, and the rows are grouped by model.
+  rows.forEach(r => r.text = (narrow ? '' : SHORT[r.m] + ' · ') + (CAND[r.n] || r.n));
+  const f = frame(host, { h: 40 + rows.length * (narrow ? 18 : 21),
+    ml: labelMargin(rows.map(r => r.text), fs, narrow ? 140 : 200), mr: 20, mt: 10, mb: 30 });
   const bh = f.ih / rows.length;
   const x = v => f.ml + (v + lim) / (2 * lim) * f.iw;
   const g = el('g', { class: 'axis' }, f.svg);
@@ -782,13 +909,12 @@ function drawBeat() {
     el('circle', { cx: x(mv), cy, r: 4, fill: c }, f.svg);
     const lt = el('text', { x: f.ml - 8, y: cy + 3.5, 'text-anchor': 'end', class: 'axis' }, f.svg);
     lt.setAttribute('fill', css('--ink-soft'));
-    lt.style.fontSize = narrow ? '9.5px' : '11px'; lt.style.fontFamily = 'var(--sans)';
-    lt.textContent = SHORT[r.m] + ' · ' + r.n.replace('complex_plddt', 'pLDDT')
-      .replace('iptm', 'ipTM').replace('ptm', 'pTM').replace('plddt', 'pLDDT');
+    lt.style.fontSize = fs + 'px'; lt.style.fontFamily = 'var(--sans)';
+    lt.textContent = r.text;
     const hz = el('rect', { x: f.ml, y: cy - bh / 2, width: f.iw, height: bh,
       fill: 'transparent' }, f.svg);
     hz.addEventListener('pointerenter', () => tipAt(tip, wrap, x(mv), cy - 56,
-      `<h4>${LABEL[r.m]} · ${r.n}</h4>`
+      `<h4>${LABEL[r.m]} · ${CAND[r.n] || r.n}</h4>`
       + `<div class="row"><span class="k">change</span><b>${mv >= 0 ? '+' : ''}${mv.toFixed(4)}</b></div>`
       + `<div class="row"><span class="k">95% CI</span><b>${lo.toFixed(4)} – ${hi.toFixed(4)}</b></div>`));
     hz.addEventListener('pointerleave', () => tip.style.opacity = 0);
@@ -1023,6 +1149,48 @@ function tiles() {
   const p = D.provenance;
   document.getElementById('stamp').textContent =
     `generated ${p.generated_utc} · bootstrap B=${p.bootstrap.B}, seed ${p.bootstrap.seed}`;
+
+  // Every number in the prose is read from the same file as the charts, never typed.
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  const rng = (vs, d, sign) => {
+    const lo = Math.min(...vs), hi = Math.max(...vs), s = v => (sign && v > 0 ? '+' : '') + v.toFixed(d);
+    return lo.toFixed(d) === hi.toFixed(d) ? s(lo) : `${s(lo)} to ${s(hi)}`;
+  };
+  set('k-samples', (Math.round(p.panel.samples_analysed / 1000) * 1000).toLocaleString('en-US'));
+  set('gapwiden', rng(MODELS.map(m => q[m].gap_widening_16_to_256.mean), 2, true));
+  const f2 = m => D.q3_epitope.per_model[m].f2;
+  set('epi-uns', rng(MODELS.map(m => f2(m).max_ej_median_unsolved), 2));
+  set('epi-sol', rng(MODELS.map(m => f2(m).max_ej_median_solved), 2));
+
+  const q4 = D.q4_pareto, B = q4.budgets_card_h, HEAD = B.indexOf(0.08);
+  const od = q4.contrasts.equal_budget.acceptable.opendde[HEAD];
+  set('pw-od', `${(100 * od.mean).toFixed(1)} points [${(100 * od.lo).toFixed(1)}, `
+    + `${(100 * od.hi).toFixed(1)}]`);
+  // The cross-budget claim only holds where BOTH metrics' paired intervals exclude zero.
+  const vd = q4.contrasts.vs_deep;
+  const bi = B.findIndex((_, i) => vd.acceptable[i].lo > 0 && vd.oracle[i].lo > 0);
+  set('pw-beat', bi < 0 ? 'no measured budget' : String(B[bi]));
+  set('pw-ratio', bi < 0 ? '–' : '1/' + Math.round(q4.contrasts.max_budget_card_h / B[bi]));
+
+  const cm = D.q3_epitope.cross_model;
+  const jac = Object.values(cm.pairwise).map(v => v.failure_jaccard);
+  set('n-samples', (Math.round(p.panel.samples_analysed / 1000) * 1000).toLocaleString('en-US'));
+  set('n-jac', rng(jac, 2));
+  set('n-allfail', `${cm.failed_by_all_four} of the ${cm.n_common_targets} they share`);
+  set('rep-cost', MODELS.map(m =>
+    `${q4.cost_per_sample_s[m].toFixed(1)} s ${SHORT[m]}`).join(', '));
+
+  // Per-model denominators with each exclusion cause counted, straight from the panel block --
+  // an engineering exclusion must never read as a scoring or biology decision.
+  const CAUSE = { dram: 'device memory', fold_artifact: 'mis-fold' };
+  set('lim-panel', MODELS.map(m => {
+    const v = p.panel.per_model[m], why = [];
+    for (const k in v.excluded_absent) why.push(`${v.excluded_absent[k].length} ${CAUSE[k] || k}`);
+    if (v.excluded_short_rung.length) why.push(`${v.excluded_short_rung.length} short pool`
+      + (v.excluded_short_rung.length > 1 ? 's' : ''));
+    return `${LABEL[m]} ${v.analysed_targets}${why.length ? ' (' + why.join(', ') + ')' : ''}`;
+  }).join(', ') + '.');
+  set('lim-cutoff', p.panel.cutoff_utc.replace('T', ' ').replace('Z', ' UTC'));
 }
 
 function controls() {
