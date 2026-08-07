@@ -372,8 +372,8 @@ select {
   Tenstorrent Wormhole Galaxy hardware.</p>
   <p>They are not four views of the same model, and they do not fail on the same targets: the
   pairwise overlap of their failure sets is <span id="n-jac">–</span> (Jaccard), and
-  <span id="n-allfail">–</span> targets are failed by all four. That partial independence is what
-  the compute-split section buys.</p>
+  <span id="n-allfail">–</span> are failed by all four. That partial independence is what the
+  compute-split section buys.</p>
   <p>Curves are exact, not simulated: every point is computed in closed form rather than drawn.
   Intervals are a 20,000-resample paired bootstrap over targets.</p>
 
@@ -1176,7 +1176,7 @@ function tiles() {
   const jac = Object.values(cm.pairwise).map(v => v.failure_jaccard);
   set('n-samples', (Math.round(p.panel.samples_analysed / 1000) * 1000).toLocaleString('en-US'));
   set('n-jac', rng(jac, 2));
-  set('n-allfail', `${cm.failed_by_all_four} of the ${cm.n_common_targets} they share`);
+  set('n-allfail', `${cm.failed_by_all_four} of the ${cm.n_common_targets} targets they share`);
   set('rep-cost', MODELS.map(m =>
     `${q4.cost_per_sample_s[m].toFixed(1)} s ${SHORT[m]}`).join(', '));
 
