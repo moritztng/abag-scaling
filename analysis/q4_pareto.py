@@ -37,7 +37,11 @@ from core import THRESHOLDS
 
 FLEET = Path.home() / "abag_xm/deepn/galaxy/fleet_results.jsonl"
 CHUNK = 64
-BUDGETS_CARD_H = [0.02, 0.04, 0.08, 0.15, 0.3, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5]
+# The ladder starts at 0.04, not lower: below that an even four-way split buys fewer than
+# four samples in total and 49 of the 151 targets get NONE, so `union` is undefined there and
+# the strategy's mean would be taken over a different target set than every other line. At
+# 0.04 every target gets at least one sample under every strategy.
+BUDGETS_CARD_H = [0.04, 0.08, 0.15, 0.3, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5]
 
 
 def fleet_cost() -> dict:
@@ -145,6 +149,7 @@ def run() -> dict:
            "rung256_card_h": {m: float(sum(cost[m][t] for t in targets) * core.TOP_RUNG / 3600)
                               for m in core.MODELS},
            "strategies": {}}
+    keep = {}  # per-target matrices for the strategies the headline compares
     for s in subsets:
         name = "+".join(m.replace("-abag", "").replace("-v2", "") for m in s)
         rows = {"subset": list(s), "oracle": [], "delivered": [], "mean_n": [],
@@ -156,6 +161,8 @@ def run() -> dict:
                     pools[t].union(allocations(s, b, cost, t)))
                 for t in targets
             ])
+            if len(s) == 1 or len(s) == len(core.MODELS):
+                keep[(name, b)] = per_t
             bm = core.boot_means(per_t)
             pt = np.nanmean(per_t, axis=0)
             rows["oracle"].append(core.ci_of(bm[:, 0], pt[0]))
@@ -165,6 +172,42 @@ def run() -> dict:
             rows["mean_n"].append(float(np.mean([
                 sum(allocations(s, b, cost, t).values()) for t in targets])))
         out["strategies"][name] = rows
+    out["contrasts"] = contrasts(keep)
+    return out
+
+
+UNION = "boltz2+opendde+protenix+esmfold2"
+SINGLES = ["boltz2", "opendde", "protenix", "esmfold2"]
+COL = {"oracle": 0, "acceptable": 2, "medium": 3, "high": 4}
+
+
+def _diff(a: np.ndarray, b: np.ndarray, col: int) -> dict:
+    d = a[:, col] - b[:, col]
+    return core.ci_of(core.boot_means(d), float(np.nanmean(d)))
+
+
+def contrasts(keep: dict) -> dict:
+    """The two comparisons the page makes, as PAIRED differences with intervals.
+
+    The bootstrap resamples targets with one shared draw, so a difference of two strategies
+    is genuinely paired and its interval is the only honest test of "beats". Reporting two
+    overlapping marginal intervals instead is how a point-estimate gap gets called a win.
+
+      equal_budget  the four-way split minus each single model at the SAME budget
+      vs_deep       the four-way split at each budget minus the best single model run at the
+                    largest budget on the ladder -- the "same answer for 1/N of the compute"
+                    comparison, which is a MATCH claim, not a beat claim
+    """
+    budgets = BUDGETS_CARD_H
+    big = budgets[-1]
+    best = max(SINGLES, key=lambda m: float(np.nanmean(keep[(m, big)][:, COL["acceptable"]])))
+    out = {"best_single_at_max_budget": best, "max_budget_card_h": big,
+           "equal_budget": {}, "vs_deep": {}}
+    for metric, col in (("oracle", COL["oracle"]), ("acceptable", COL["acceptable"])):
+        out["equal_budget"][metric] = {
+            m: [_diff(keep[(UNION, b)], keep[(m, b)], col) for b in budgets] for m in SINGLES}
+        out["vs_deep"][metric] = [
+            _diff(keep[(UNION, b)], keep[(best, big)], col) for b in budgets]
     return out
 
 

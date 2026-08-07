@@ -88,6 +88,11 @@ def analyse(model: str, targets: list) -> dict:
         "selection_efficiency_k": KGRID[1:],
         "effective_n": core.ci_of(b_neff, neff),
         "gap_256": core.ci_of(b_or[:, -1] - b_us[:, -1], m_or[-1] - m_us[-1]),
+        # "the gap widens" as a statistic rather than the shape of two lines: how much
+        # bigger the oracle-minus-delivered gap is at 256 than at 16, paired over targets.
+        "gap_widening_16_to_256": core.ci_of(
+            (b_or[:, -1] - b_us[:, -1]) - (b_or[:, 15] - b_us[:, 15]),
+            (m_or[-1] - m_us[-1]) - (m_or[15] - m_us[15])),
         "user_gain_16_to_256": core.ci_of(b_us[:, -1] - b_us[:, 15], m_us[-1] - m_us[15]),
         "oracle_gain_16_to_256": core.ci_of(b_or[:, -1] - b_or[:, 15], m_or[-1] - m_or[15]),
         "thresholds": {},

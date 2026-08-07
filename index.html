@@ -489,7 +489,8 @@ function segmented(host, opts, cur, cb) {
 
 // ---------------------------------------------------------------- state
 let D = null;
-const S = { metric: 'mean', pmetric: 'acceptable', budget: 2, exModel: 'boltz2',
+// budget: index into q4_pareto.budgets_card_h -- 1 is 0.08 card-h/target, the headline point.
+const S = { metric: 'mean', pmetric: 'acceptable', budget: 1, exModel: 'boltz2',
             exTarget: null, exSort: 'conf' };
 
 const METRICS = [
@@ -822,7 +823,7 @@ function drawPareto() {
   const y = v => f.mt + f.ih - (v / hi) * f.ih;
   const yt = []; for (let v = 0; v <= hi + 1e-9; v += 0.2) yt.push(+v.toFixed(1));
   yaxis(f, y, yt, v => isFrac ? Math.round(v * 100) + '%' : v.toFixed(1));
-  xticks(f, x, [0.02, 0.08, 0.3, 1.0, 2.5], v => v < 1 ? String(v) : v.toFixed(1));
+  xticks(f, x, [0.04, 0.08, 0.3, 1.0, 2.5], v => v < 1 ? String(v) : v.toFixed(1));
   axlabel(f, 'card-hours per target', 'x');
   axlabel(f, isFrac ? 'targets reaching it' : 'best DockQ', 'y');
 
@@ -897,7 +898,7 @@ function drawDelivered() {
   const x = v => f.ml + (Math.log10(v) - lx) / (hx - lx) * f.iw;
   const y = v => f.mt + f.ih - (v / hi) * f.ih;
   yaxis(f, y, [0, 0.2, 0.4, 0.6], v => v.toFixed(1));
-  xticks(f, x, [0.02, 0.08, 0.3, 1.0, 2.5], v => v < 1 ? String(v) : v.toFixed(1));
+  xticks(f, x, [0.04, 0.08, 0.3, 1.0, 2.5], v => v < 1 ? String(v) : v.toFixed(1));
   axlabel(f, 'card-hours per target', 'x');
   axlabel(f, 'delivered DockQ', 'y');
   which.forEach(w => {

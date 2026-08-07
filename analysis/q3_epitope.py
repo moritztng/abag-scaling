@@ -160,6 +160,39 @@ def cross_model(results: dict) -> dict:
     }
 
 
+EJ_STAR_GRID = [0.30, 0.40, 0.458, 0.50, 0.558, 0.625, 0.70, 0.80]
+DEPTH_GRID = [64, 128, 256]
+
+
+def _frac_no_site(model: str, ej_star: float, depth: int | None = None) -> float | None:
+    """Share of a model's failed targets whose best sample never reaches EJ*."""
+    dq, ej = core.pools(model), ej_pools(model)
+    ts = sorted(ej)
+    mx_ej = np.array([(ej[t].head(depth) if depth else ej[t]).epitope_jaccard.max() for t in ts])
+    mx_dq = np.array([dq[t].dockq.max() for t in ts])
+    bad = mx_dq < ACCEPTABLE
+    return float((bad & (mx_ej < ej_star)).sum() / bad.sum()) if bad.any() else None
+
+
+def sensitivity() -> dict:
+    """EJ* is a knob, so publish what the headline does as it moves.
+
+    Two sweeps. `ej_star` walks the cut across and beyond the range of the four per-model
+    histogram troughs. `depth` re-scores the two models with COMPLETE epitope labels at the
+    depths the two partial models actually have -- the control for the objection that the
+    partial models' higher fractions are a coverage artifact. Partial coverage can only
+    OVER-count "never finds the site" (an unlabelled sample that found the site is unseen),
+    so this bounds the bias rather than excusing it.
+    """
+    return {
+        "ej_star_grid": EJ_STAR_GRID,
+        "ej_star": {m: [_frac_no_site(m, e) for e in EJ_STAR_GRID] for m in core.MODELS},
+        "depth_grid": DEPTH_GRID,
+        "depth_control": {m: [_frac_no_site(m, 0.558, d) for d in DEPTH_GRID]
+                          for m in ("boltz2", "opendde-abag")},
+    }
+
+
 def run() -> dict:
     thr = {m: ej_threshold(m) for m in core.MODELS}
     # One EJ* shared by every model -- the median of the per-model troughs -- so the
@@ -167,7 +200,7 @@ def run() -> dict:
     ej_star = float(np.median([thr[m]["trough"] for m in core.MODELS]))
     res = {m: analyse(m, ej_star) for m in core.MODELS}
     return {"ej_star": ej_star, "ej_hist": thr, "per_model": res,
-            "cross_model": cross_model(res)}
+            "sensitivity": sensitivity(), "cross_model": cross_model(res)}
 
 
 if __name__ == "__main__":

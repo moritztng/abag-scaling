@@ -58,6 +58,8 @@ def provenance() -> dict:
         "models": core.MODELS,
         "top_rung": core.TOP_RUNG,
         "thresholds": {n: c for n, c in core.THRESHOLDS},
+        # Every target and sample count the page states, derived rather than typed.
+        "panel": core.panel(),
     }
 
 

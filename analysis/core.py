@@ -93,6 +93,83 @@ def common_targets(models, **kw) -> list:
     return sorted(set.intersection(*[set(pools(m, **kw)) for m in models]))
 
 
+# --------------------------------------------------------------------- panel bookkeeping
+
+# Why a target is missing from a model's parquet. The COUNTS below are derived from the
+# data; only the REASON is metadata, and each one is evidenced:
+#
+#   dram            measured Wormhole DRAM capacity boundary. 9j4c shows rc=0/cifs=0/oom=1
+#                   for protenix-v2 and esmfold2 in galaxy/fleet_results.jsonl; opendde-abag
+#                   carries 9i3p/9ivj/9j4c/9q7y from the earlier p2 window and has no fleet
+#                   record for them at all. An engineering limit, never a modelling choice.
+#   fold_artifact   opendde-abag 9sbb folded 4/4 clean on the Galaxy but the fold itself is a
+#                   known p2-era pipeline artifact: galaxy samples sit in a pTM 0.668-0.697
+#                   basin against ~0.91 for the same input refolded on qb1, DockQ 0.023 vs
+#                   0.880 under the SAME fixed scorer, reproduced by a decisive N=4 refold.
+#                   Excluded at source (GALAXY_EXCLUDE). A prevalence scan over 41 paired
+#                   targets found it the only such case.
+ABSENT_REASON = {
+    "opendde-abag": {"9i3p": "dram", "9ivj": "dram", "9j4c": "dram", "9q7y": "dram",
+                     "9sbb": "fold_artifact"},
+    "protenix-v2": {"9j4c": "dram"},
+    "esmfold2": {"9j4c": "dram"},
+}
+
+# End of the last Galaxy window (p29) that fed the frozen parquets. Six rung-256 chunks
+# landed on the Galaxy after this and are NOT in the analysis: boltz2 9ua5 c2,
+# opendde-abag 9rye c2+c3 and 9xqn c2, protenix-v2 9d73 c1+c2. They would complete three
+# targets (boltz2 9ua5; opendde-abag 9rye, 9xqn). Their CIFs were never labelled.
+CUTOFF_UTC = "2026-08-06T23:16Z"
+POST_CUTOFF_CHUNKS = 6
+POST_CUTOFF_WOULD_ADD = {"boltz2": ["9ua5"], "opendde-abag": ["9rye", "9xqn"]}
+
+
+@functools.lru_cache(maxsize=None)
+def panel() -> dict:
+    """Every target count the page states, derived from the parquets rather than typed.
+
+    `analysed` is the sample count the analysis actually runs on: the N=256 pools, one row
+    per distinct structure. It is NOT the row count of the parquets -- rungs nest, so a
+    structure appears once per rung label it belongs to and the raw row total (382,912)
+    double-counts by ~2.4x.
+    """
+    per = {m: load_samples(m) for m in MODELS}
+    all_targets = sorted(set().union(*[set(d.target.unique()) for d in per.values()]))
+    labelled = {t for d in per.values() for t in d[d.dockq.notna()].target.unique()}
+    unscorable = sorted(set(all_targets) - labelled)
+
+    models = {}
+    distinct = 0
+    for m, d in per.items():
+        have = set(d.target.unique())
+        kept = set(pools(m))
+        absent = sorted(set(all_targets) - have)
+        short = sorted(have - kept - set(unscorable))
+        by_reason = {}
+        for t in absent:
+            by_reason.setdefault(ABSENT_REASON.get(m, {}).get(t, "unknown"), []).append(t)
+        distinct += int(d.drop_duplicates(subset=["target", "hardware", "chunk", "rank"])
+                        .dockq.notna().sum())
+        models[m] = {
+            "analysed_targets": len(kept),
+            "excluded_unscorable": len(unscorable),
+            "excluded_absent": by_reason,
+            "excluded_short_rung": short,
+        }
+
+    return {
+        "panel_targets": len(all_targets),
+        "scorable_targets": len(labelled),
+        "unscorable_targets": unscorable,
+        "per_model": models,
+        "samples_analysed": sum(len(p) for m in MODELS for p in pools(m).values()),
+        "samples_distinct_labelled": distinct,
+        "cutoff_utc": CUTOFF_UTC,
+        "post_cutoff_chunks": POST_CUTOFF_CHUNKS,
+        "post_cutoff_would_add": POST_CUTOFF_WOULD_ADD,
+    }
+
+
 # ------------------------------------------------------------------ selection weights
 
 
