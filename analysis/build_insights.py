@@ -19,6 +19,7 @@ import numpy as np
 
 import core
 import explorer
+import integrity
 import q1_selection
 import q2_confidence
 import q3_epitope
@@ -26,6 +27,7 @@ import q4_pareto
 import q5_selectors
 import q6_forecast
 import q7_antibody
+import robustness
 
 
 def clean(o):
@@ -72,6 +74,10 @@ SECTIONS = {
     "q6_forecast": q6_forecast.run,
     "q7_antibody": q7_antibody.run,
     "explorer": explorer.run,
+    # Part 0 and the hostile-read controls are rendered, not just recorded: the page's
+    # limitations spine states the measured leave-out delta and the label depths.
+    "integrity": integrity.run,
+    "robustness": robustness.run,
 }
 
 
