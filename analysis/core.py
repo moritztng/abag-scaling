@@ -13,8 +13,8 @@ Everything downstream is built from two primitives:
     (seed 20260802, same convention as DATASHEET section 6), so CIs from different models
     and metrics are directly comparable and their differences are genuinely paired.
 
-Data source: the frozen parquets under ~/abag_xm/deepn/dataset/. Nothing here folds,
-scores, or writes to the dataset.
+Data source: the frozen parquets under ~/abag_xm/deepn/dataset_n512/ (override with
+ABAG_XM_DATASET). Nothing here folds, scores, or writes to the dataset.
 """
 
 from __future__ import annotations
@@ -27,12 +27,12 @@ import numpy as np
 import pandas as pd
 from scipy.special import gammaln
 
-DATASET = Path(os.environ.get("ABAG_XM_DATASET", Path.home() / "abag_xm/deepn/dataset"))
+DATASET = Path(os.environ.get("ABAG_XM_DATASET", Path.home() / "abag_xm/deepn/dataset_n512"))
 MODELS = ["boltz2", "opendde-abag", "protenix-v2", "esmfold2"]
 THRESHOLDS = [("acceptable", 0.23), ("medium", 0.49), ("high", 0.80)]
 BOOTSTRAP_B = 20000
 BOOTSTRAP_SEED = 20260802
-TOP_RUNG = 256
+TOP_RUNG = 512
 
 # Confidence flavours. `selector` is the model's own shipped choice (top-plddt for
 # esmfold2, top-confidence_score otherwise; DATASHEET section 4). esmfold2 carries only
@@ -72,13 +72,15 @@ def load_curve(model: str) -> pd.DataFrame:
 def pools(model: str, rung: int = TOP_RUNG, min_n: int = TOP_RUNG) -> dict:
     """Per-target sample pools at one rung, DockQ-labelled targets only.
 
-    Rungs nest exactly (verified: rung-128 chunk 0 is bit-identical to rung-256 chunk 0),
-    so the rung-256 pool is a strict superset of every lower rung and subsampling inside
-    it reproduces the ladder without mixing separately folded arms.
+    Rungs nest physically: rung 512's chunks 0-3 are the same inodes as rung 256's, so
+    the rung-512 pool is a strict superset of every lower rung and subsampling inside it
+    reproduces the ladder without mixing separately folded arms. Truncating each 512 pool
+    back to its first 256 samples reproduces the published N=256 statistics exactly
+    (635/635 targets, G3).
 
-    `min_n` drops the handful of targets whose top rung landed short (PROVENANCE lists
-    them: boltz2 9ua5, opendde 9rye/9gvn/9xqn, protenix 9d73) -- carrying them would make
-    the per-N curves compare different depths at the same nominal N.
+    Every cell in the completed panel is 512 samples deep by construction, so `min_n`
+    no longer drops short rungs -- it is a tripwire. A target that fails it is a pooling
+    bug, not a shallower measurement.
     """
     df = load_samples(model)
     df = df[(df.rung == rung) & df.dockq.notna()]
@@ -95,43 +97,44 @@ def common_targets(models, **kw) -> list:
 
 # --------------------------------------------------------------------- panel bookkeeping
 
-# Why a target is missing from a model's parquet. The COUNTS below are derived from the
-# data; only the REASON is metadata, and each one is evidenced:
+# The panel is complete: 164 targets x 4 models = 656 cells, every cell 512 samples deep.
+# Two things still keep a cell out of the analysis, and neither is missing data:
 #
-#   dram            measured Wormhole DRAM capacity boundary. 9j4c shows rc=0/cifs=0/oom=1
-#                   for protenix-v2 and esmfold2 in galaxy/fleet_results.jsonl; opendde-abag
-#                   carries 9i3p/9ivj/9j4c/9q7y from the earlier p2 window and has no fleet
-#                   record for them at all. An engineering limit, never a modelling choice.
-#   fold_artifact   opendde-abag 9sbb folded 4/4 clean on the Galaxy but the fold itself is a
+#   unscorable      9ly2, 9ly3, 9lz2 -- the DockQ scorer resolves no antibody-antigen
+#                   interface for them in any model, so there is nothing to score. Derived
+#                   from the parquets below, not typed.
+#   fold_artifact   opendde-abag 9sbb folded 8/8 clean on the Galaxy but the fold itself is a
 #                   known p2-era pipeline artifact: galaxy samples sit in a pTM 0.668-0.697
 #                   basin against ~0.91 for the same input refolded on qb1, DockQ 0.023 vs
 #                   0.880 under the SAME fixed scorer, reproduced by a decisive N=4 refold.
-#                   Excluded at source (GALAXY_EXCLUDE). A prevalence scan over 41 paired
-#                   targets found it the only such case.
-ABSENT_REASON = {
-    "opendde-abag": {"9i3p": "dram", "9ivj": "dram", "9j4c": "dram", "9q7y": "dram",
-                     "9sbb": "fold_artifact"},
-    "protenix-v2": {"9j4c": "dram"},
-    "esmfold2": {"9j4c": "dram"},
+#                   Excluded at source (GALAXY_EXCLUDE in the campaign labeller). A
+#                   prevalence scan over 41 paired targets found it the only such case.
+EXCLUDED_CELLS = {"opendde-abag": {"9sbb": "fold_artifact"}}
+
+# Code provenance. The campaign ran one frozen engine tree so that every cell is
+# comparable. Six cells -- the four largest targets, which needed memory fixes that were
+# not in that tree -- were folded on two later trees, each cell entirely on one tree. The
+# fixes are bit-exact at their own gates but the trees are not byte-identical, so every
+# headline is reported with these cells in and out (the leave-out invariance test).
+OFF_TREE_CELLS = {
+    "opendde-abag": {"9i3p": "oomfix", "9ivj": "oomfix", "9q7y": "oomfix", "9j4c": "p35"},
+    "protenix-v2": {"9j4c": "oomfix"},
+    "esmfold2": {"9j4c": "p35"},
 }
 
-# End of the last Galaxy window (p29) that fed the frozen parquets. Six rung-256 chunks
-# landed on the Galaxy after this and are NOT in the analysis: boltz2 9ua5 c2,
-# opendde-abag 9rye c2+c3 and 9xqn c2, protenix-v2 9d73 c1+c2. They would complete three
-# targets (boltz2 9ua5; opendde-abag 9rye, 9xqn). Their CIFs were never labelled.
-CUTOFF_UTC = "2026-08-06T23:16Z"
-POST_CUTOFF_CHUNKS = 6
-POST_CUTOFF_WOULD_ADD = {"boltz2": ["9ua5"], "opendde-abag": ["9rye", "9xqn"]}
+
+def homogeneous_targets(model: str) -> list:
+    """Analysed targets of `model` minus the cells folded off the frozen engine tree."""
+    return sorted(set(pools(model)) - set(OFF_TREE_CELLS.get(model, ())))
 
 
 @functools.lru_cache(maxsize=None)
 def panel() -> dict:
-    """Every target count the page states, derived from the parquets rather than typed.
+    """Every target and sample count the page states, derived from the parquets not typed.
 
-    `analysed` is the sample count the analysis actually runs on: the N=256 pools, one row
-    per distinct structure. It is NOT the row count of the parquets -- rungs nest, so a
-    structure appears once per rung label it belongs to and the raw row total (382,912)
-    double-counts by ~2.4x.
+    `samples_analysed` is what the analysis runs on: the 512-deep pools, one row per
+    distinct structure. It is NOT the parquet row total -- rungs nest, so a structure
+    carries one row per rung label it belongs to and the raw total double-counts.
     """
     per = {m: load_samples(m) for m in MODELS}
     all_targets = sorted(set().union(*[set(d.target.unique()) for d in per.values()]))
@@ -140,33 +143,33 @@ def panel() -> dict:
 
     models = {}
     distinct = 0
+    depths = set()
     for m, d in per.items():
-        have = set(d.target.unique())
-        kept = set(pools(m))
-        absent = sorted(set(all_targets) - have)
-        short = sorted(have - kept - set(unscorable))
-        by_reason = {}
-        for t in absent:
-            by_reason.setdefault(ABSENT_REASON.get(m, {}).get(t, "unknown"), []).append(t)
+        kept = pools(m)
+        top = d[d.rung == TOP_RUNG]
+        depths |= set(top.groupby("target").size().unique().tolist())
+        dropped = sorted(set(all_targets) - set(kept) - set(unscorable))
         distinct += int(d.drop_duplicates(subset=["target", "hardware", "chunk", "rank"])
                         .dockq.notna().sum())
         models[m] = {
             "analysed_targets": len(kept),
             "excluded_unscorable": len(unscorable),
-            "excluded_absent": by_reason,
-            "excluded_short_rung": short,
+            "excluded_cells": {t: EXCLUDED_CELLS.get(m, {}).get(t, "unknown")
+                               for t in dropped},
+            "off_tree_cells": sorted(set(OFF_TREE_CELLS.get(m, ())) & set(kept)),
         }
 
     return {
         "panel_targets": len(all_targets),
+        "panel_cells": len(all_targets) * len(MODELS),
+        "cell_depths": sorted(depths),
         "scorable_targets": len(labelled),
         "unscorable_targets": unscorable,
         "per_model": models,
+        "analysed_cells": sum(v["analysed_targets"] for v in models.values()),
+        "off_tree_cell_count": sum(len(v["off_tree_cells"]) for v in models.values()),
         "samples_analysed": sum(len(p) for m in MODELS for p in pools(m).values()),
         "samples_distinct_labelled": distinct,
-        "cutoff_utc": CUTOFF_UTC,
-        "post_cutoff_chunks": POST_CUTOFF_CHUNKS,
-        "post_cutoff_would_add": POST_CUTOFF_WOULD_ADD,
     }
 
 

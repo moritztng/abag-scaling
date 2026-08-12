@@ -1,5 +1,12 @@
 """Q2 -- why confidence cannot rank.
 
+The result that matters is not the whole-pool correlation, it is WHERE the correlation
+lives. Confidence ranks a whole 512-sample pool about as well as its headline rho says,
+and then stops ranking, or inverts, inside its own top tail -- which is the only region a
+selector ever operates in. `tail_rho` measures that; `robustness.tail_range_null` supplies
+the control that it is not simply an artifact of looking at fewer samples over a narrower
+range.
+
 Two correlations, deliberately separated:
 
     within-target   Spearman(confidence, DockQ) over one target's 256 samples, then
@@ -47,6 +54,38 @@ def selector_control(model: str) -> dict:
     }
 
 
+TAIL_FRACS = [1.0, 0.25, 0.125, 0.03125]
+
+
+def tail_rho(model: str) -> dict:
+    """Spearman(selector, DockQ) restricted to the top `f` of the pool by confidence.
+
+    Per target, then bootstrapped over targets. The top 3.1% of 512 is 16 samples, which is
+    the neighbourhood a real user picking from a deep pool actually chooses in.
+    """
+    pl = core.pools(model)
+    targets = sorted(pl)
+    out = {}
+    for f in TAIL_FRACS:
+        rhos = []
+        for t in targets:
+            p = pl[t]
+            s = p.selector.to_numpy()
+            d = p.dockq.to_numpy()
+            k = max(3, int(round(len(s) * f)))
+            top = np.argsort(-s, kind="stable")[:k]
+            rhos.append(core.spearman(s[top], d[top]))
+        rhos = np.array(rhos)
+        out[str(f)] = {
+            "n_samples": int(round(core.TOP_RUNG * f)),
+            "n_targets_finite": int(np.isfinite(rhos).sum()),
+            "rho": core.paired_bootstrap(np.nan_to_num(rhos, nan=0.0)),
+            "median": float(np.nanmedian(rhos)),
+            "frac_negative": float((rhos[np.isfinite(rhos)] < 0).mean()),
+        }
+    return out
+
+
 def analyse(model: str) -> dict:
     pl = core.pools(model)
     targets = sorted(pl)
@@ -89,6 +128,8 @@ def analyse(model: str) -> dict:
         for b in range(4)
     ]
     out["selector_control"] = selector_control(model)
+    out["tail_rho"] = tail_rho(model)
+    out["tail_fracs"] = TAIL_FRACS
     return out
 
 
@@ -116,3 +157,6 @@ if __name__ == "__main__":
         for s in a["difficulty_strata"]:
             print(f"    {s['stratum']:<12} n={s['n_targets']:>3} oracle={s['oracle_dockq_mean']:.3f}"
                   f"  rho_med selector={s['within_target_rho_median']['selector']:+.3f}")
+        print("    tail rho: " + "  ".join(
+            f"top{int(f * 1000) / 10:g}% (n={a['tail_rho'][str(f)]['n_samples']}) "
+            f"{core.fmt(a['tail_rho'][str(f)]['rho'], 3)}" for f in a["tail_fracs"]))

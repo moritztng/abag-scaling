@@ -1,14 +1,20 @@
 """Q6 -- what would it actually take to get there by sampling alone?
 
-Fits the measured k = 1..256 curves with two families and reports both:
+Fits the measured k = 1..512 curves with two families and reports both:
 
     power    y(N) = a - b * N^(-alpha)      (saturating, has a finite ceiling a)
     log      y(N) = c + d * log2(N)         (never saturates)
 
 and extrapolates each to the N that reaches 80% of targets at DockQ >= 0.23 and >= 0.49.
-Every extrapolated N beyond 256 is an EXTRAPOLATION PAST THE MEASURED RANGE and is
+Every extrapolated N beyond 512 is an EXTRAPOLATION PAST THE MEASURED RANGE and is
 labelled as such; where the power fit's own ceiling sits below the target the honest
 answer is "unreachable by sampling", not a number.
+
+The measured range doubled from the first release, so the fit also reports its own
+FIT-RANGE SENSITIVITY: the same two families fitted on 1..256 and on 1..512. If the two
+answers differ by more than about 2x the extrapolation is unstable and the page says that
+instead of quoting a single N. This is the honest defence against "you extrapolated an
+astronomical sample count from a curve that stops at 256".
 
 Cost conversion uses the same fleet per-sample card-seconds as Q4.
 """
@@ -88,6 +94,9 @@ def run() -> dict:
                 for t in targets
             ]).mean(0)
         fits = {k: fit_both(v) for k, v in curves.items()}
+        # The same fit truncated to the previously published range, so the page can show how
+        # much of the answer is the data and how much is where the data happens to stop.
+        fits_256 = {k: fit_both(v[:256]) for k, v in curves.items()}
         # oracle DockQ and threshold fractions are both bounded by 1.0.
         s_per_sample = float(np.median([cost[m][t] for t in targets if t in cost.get(m, {})]))
         need = {}
@@ -98,14 +107,26 @@ def run() -> dict:
                 n = sol.get(k)
                 sol[k.replace("_n", "_card_h_per_target")] = (
                     None if n is None else n * s_per_sample / 3600.0)
-            sol["measured_at_256"] = float(curves[key][-1])
+            sol["measured_at_512"] = float(curves[key][-1])
+            prev = solve(fits_256[key], TARGET_FRAC)
+            sol["fit_range_sensitivity"] = {
+                "log_n_fit_1_256": prev.get("log_n"),
+                "log_n_fit_1_512": sol.get("log_n"),
+                "power_n_fit_1_256": prev.get("power_n"),
+                "power_n_fit_1_512": sol.get("power_n"),
+                "log_ratio": (None if not prev.get("log_n") or not sol.get("log_n")
+                              else sol["log_n"] / prev["log_n"]),
+            }
             need[name] = sol
         res[m] = {
             "n_targets": len(targets),
             "s_per_sample": s_per_sample,
+            "data_ends_at": len(curves["oracle_dockq"]),
             "fits": fits,
+            "fits_1_256": fits_256,
             "measured": {k: {"at_1": float(v[0]), "at_16": float(v[15]),
-                             "at_256": float(v[-1])} for k, v in curves.items()},
+                             "at_256": float(v[255]), "at_512": float(v[-1])}
+                         for k, v in curves.items()},
             "n_for_80pct": need,
         }
     return {"target_frac": TARGET_FRAC, "per_model": res}
@@ -123,6 +144,11 @@ if __name__ == "__main__":
             pn = s["power_n"]
             pw = (f"{pn:.3g} ({s['power_card_h_per_target']:.3g} card-h/tgt)" if pn
                   else f"unreachable (ceiling {s['power_ceiling']:.3f})")
-            print(f"  80% at DockQ>={dict(THRESHOLDS)[name]}: measured@256 "
-                  f"{s['measured_at_256']:.3f} | saturating N={pw} | log-linear N="
+            print(f"  80% at DockQ>={dict(THRESHOLDS)[name]}: measured@512 "
+                  f"{s['measured_at_512']:.3f} | saturating N={pw} | log-linear N="
                   f"{s['log_n']:.3g} ({s['log_card_h_per_target']:.3g} card-h/tgt)")
+            fs = s["fit_range_sensitivity"]
+            r = fs["log_ratio"]
+            print(f"     fit range 1..256 -> log N={fs['log_n_fit_1_256']:.3g}   "
+                  f"1..512 -> log N={fs['log_n_fit_1_512']:.3g}   ratio "
+                  f"{'n/a' if r is None else format(r, '.2f')}")
