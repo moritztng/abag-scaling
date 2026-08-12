@@ -135,6 +135,13 @@ def analyse(model: str, targets: list) -> dict:
         "thresholds": {},
     }
 
+    # Both curves measured against their own single-draw baseline. This is the pair the
+    # headline is about -- "what did drawing more buy?" -- and unlike the raw levels it is a
+    # PAIRED quantity, so its interval is the interval of the claim rather than the much
+    # wider spread of per-target difficulty.
+    out["user_gain_from_1"] = core.ci_of(b_us[:, gi] - b_us[:, :1], m_us[gi] - m_us[0])
+    out["oracle_gain_from_1"] = core.ci_of(b_or[:, gi] - b_or[:, :1], m_or[gi] - m_or[0])
+
     # H1 -- delivered saturation. k* plus the paired interval on how much the last
     # doublings actually bought the user.
     out["k_star"] = core.ci_of(_k_star(b_us), _k_star(m_us[None, :])[0])

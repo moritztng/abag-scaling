@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sampling scales. Selection does not. — AbAg-XM deep-N</title>
-<meta name="description" content="162,000 DockQ-labelled antibody-antigen samples from four structure predictors. Sampling 256 times and trusting the model's own confidence delivers what a perfect chooser would get from one to three samples.">
+<meta name="description" content="329,000 DockQ-labelled antibody-antigen samples from four structure predictors, 512 per target. Past about 32 samples the structure you receive stops improving, while the best one in the pool keeps getting better. Effective N stays between 1 and 3 across a 256-fold range.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fragment+Mono&display=swap" rel="stylesheet">
@@ -228,28 +228,87 @@ select {
 <div class="wrap">
 
 <div class="hero">
-  <p class="kicker"><span id="k-samples">–</span> labelled samples · 4 models · 161-target
-  antibody–antigen panel</p>
-  <h1>Sampling raises the ceiling. Nobody reaches it.</h1>
-  <p class="lede">Draw 256 structures for one antibody–antigen complex and the best of them beats
-  the first by a wide margin. Ask the model which one to keep and it hands you <b>what a perfect
-  chooser would have found in one to three draws</b>. Every model, at every quality bar we tested.
-  Accuracy is DockQ: 0 to 1 agreement with the experimentally solved structure, where <b>0.23</b>
-  is the community's <i>acceptable</i> bar and 0.8 is near-perfect.</p>
+  <p class="kicker"><span id="k-samples">–</span> labelled samples · 512 per target · 4 models ·
+  161-target antibody–antigen panel</p>
+  <h1>Sampling scales. Selection does not.</h1>
+  <p class="lede">Draw 512 structures for one antibody–antigen complex and the best of them keeps
+  getting better, at a steady rate, all the way to the cap. The one the model hands you
+  <b>stops improving after about 32</b>. Past that point every extra structure you pay for is one
+  you will not receive. Accuracy is DockQ: 0 to 1 agreement with the experimentally solved
+  structure, where <b>0.23</b> is the community's <i>acceptable</i> bar and 0.8 is near-perfect.</p>
 
   <div class="tiles">
-    <div class="tile"><div class="n" id="t-neff">–</div><div class="l">samples' worth of mean DockQ delivered, out of 256 drawn</div></div>
-    <div class="tile"><div class="n" id="t-rho">–</div><div class="l">rank correlation between a model's confidence and its own samples' accuracy</div></div>
+    <div class="tile"><div class="n" id="t-neff">–</div><div class="l">samples' worth of accuracy delivered, out of 512 drawn — and it does not grow with N</div></div>
+    <div class="tile"><div class="n" id="t-tail">–</div><div class="l">rank correlation between confidence and accuracy inside confidence's own top quartile</div></div>
     <div class="tile"><div class="n" id="t-div">–</div><div class="l">less compute for four models to match the best single model at full depth</div></div>
   </div>
 </div>
 
+<section id="deliv">
+  <h2>What you actually get stops improving.</h2>
+  <p>This is the line a user lives on: the expected DockQ of the structure the model's own
+  confidence ranks first, out of <i>k</i> drawn. It rises to about <i>k</i> = 32 and then goes
+  flat. Going from 32 samples to 512 — sixteen times the compute — moves it by
+  <b><span id="d-delta32">–</span></b>, and <b>every model's 95% interval contains zero</b>. Over
+  the same range the best structure in the pool gains
+  <b><span id="d-oracle32">–</span> DockQ</b>.</p>
+  <div class="card">
+    <div class="figwrap"><div id="c-deliv2"></div><div class="tip" id="tip-deliv2"></div></div>
+    <div class="legend" id="lg-deliv2"></div>
+    <p class="foot">Both lines are measured against the same model's own single draw, so the
+    vertical axis reads as "what did drawing more buy?". Shaded band = 95% paired bootstrap
+    interval on the delivered gain, which is the quantity the claim is about. MEASURED at every
+    <i>k</i> from 1 to 512; the curves are exact expectations over uniform <i>k</i>-subsets, not
+    simulated draws.</p>
+    <details><summary>Table: delivered(512) − delivered(k)</summary><div id="tb-deliv2"></div></details>
+  </div>
+</section>
+
+<section id="law">
+  <h2>Effective N does not grow with N.</h2>
+  <p>Read the ceiling curve backwards: how many samples would a perfect chooser have needed to
+  reach what the model delivers from <i>N</i>? Across a 256-fold range of <i>N</i> the answer
+  stays between <b><span id="law-range">–</span></b>. Fitting log₂(effective N) against log₂(N)
+  gives a slope of <b><span id="law-b">–</span></b>, against 0 for a flat law and 1 for constant
+  efficiency. So the share of your draws that reaches you falls as 1/N: at N = 512 it is
+  <b><span id="law-eff">–</span></b>.</p>
+  <div class="card">
+    <div class="figwrap"><div id="c-law"></div><div class="tip" id="tip-law"></div></div>
+    <div class="legend" id="lg-law"></div>
+    <p class="foot" id="law-foot"></p>
+    <details><summary>Table</summary><div id="tb-law"></div></details>
+  </div>
+</section>
+
+<section id="why">
+  <h2>Why: confidence stops ranking exactly where it is used.</h2>
+  <p>A selector only ever operates in its own top tail — the highest-confidence handful. Restrict
+  the correlation between confidence and accuracy to that region and it collapses, and for
+  OpenDDE-abag it <b>inverts</b>: inside its own top quartile, higher confidence means a worse
+  structure. The dashed line is the control that makes this worth stating: a
+  <b>random</b> subset of the same size holds the whole-pool correlation, so this is not an
+  artifact of looking at fewer samples over a narrower range. The weak positive correlation
+  measured over a whole pool is carried <b>entirely by samples no selector will ever pick</b>.</p>
+  <div class="card">
+    <div class="figwrap"><div id="c-tail"></div><div class="tip" id="tip-tail"></div></div>
+    <div class="legend" id="lg-tail"></div>
+    <p class="foot" id="tail-foot"></p>
+    <details><summary>Table: tail minus same-size random control</summary><div id="tb-tail"></div></details>
+  </div>
+</section>
+
 <section id="gap">
-  <h2>The gap does not close. It widens.</h2>
-  <p>Solid = the best sample in the pool. Dashed = the one the model's own confidence hands
-  you. More sampling lifts the ceiling on every model; the delivered line is flat. The distance
-  between them is <b><span id="gapwiden">–</span> DockQ wider at 256 samples than at 16</b>,
-  every model's 95% interval excluding zero.</p>
+  <h2>The ceiling keeps rising, so the gap keeps widening.</h2>
+  <p>Solid = the best sample in the pool. Dashed = what confidence delivers. The ceiling gains
+  <b><span id="g-perdbl">–</span> DockQ per doubling</b> and that rate is essentially unchanged
+  from 64→128 to 256→512, so nothing here saturates inside the measured range. The gap is
+  <b><span id="gapwiden">–</span> DockQ wider at 512 samples than at 16</b>, every interval
+  excluding zero.</p>
+  <p class="foot" style="margin-top:-6px">Honest correction to our first release, which claimed no
+  knee at all: the <i>second difference</i> of the gap is negative with an interval excluding zero
+  for <span id="g-knee">–</span>, so the widening decelerates slightly there. Because the
+  ceiling's gain per doubling is flat, that deceleration is the delivered line ticking up inside
+  its own noise, not the ceiling bending.</p>
   <div class="card">
     <div class="ctl">
       <div class="seg" id="metric-seg"></div>
@@ -260,23 +319,24 @@ select {
   </div>
 </section>
 
-<section id="neff">
-  <h2>256 samples in, 2 samples out.</h2>
-  <p>Read the ceiling curve backwards: how many samples would a perfect chooser have needed to
-  reach the accuracy the model actually delivers from 256? The answer is <b>1 to 3</b>, whether
-  you score mean DockQ or count the targets clearing a quality bar. The bar is the estimate, the
-  line its 95% interval — even the widest interval tops out under 15 of the 256.</p>
+<section id="cost">
+  <h2>What it would cost to get there by sampling alone.</h2>
+  <p>Extrapolate the ceiling's own trend to the point where 80% of targets carry an acceptable
+  pose. Solid is MEASURED to 512; the vertical rule is where the data stops and everything past it
+  is <b>DERIVED</b> from a log-linear fit that assumes no ceiling. The fitted sample counts are
+  <b><span id="c-need">–</span></b>.</p>
   <div class="card">
-    <div class="figwrap"><div id="c-neff"></div><div class="tip" id="tip-neff"></div></div>
-    <div class="legend" id="lg-neff"></div>
-    <p class="foot" id="neff-foot"></p>
+    <div class="figwrap"><div id="c-cost"></div><div class="tip" id="tip-cost"></div></div>
+    <div class="legend" id="lg-cost"></div>
+    <p class="foot" id="cost-foot"></p>
+    <details><summary>Table: both fit families, and the fit-range sensitivity</summary><div id="tb-cost"></div></details>
   </div>
 </section>
 
 <section id="conf">
   <h2>Confidence knows which target is easy. Not which sample is right.</h2>
   <p>The same score, correlated two ways. Across targets it works: a model knows which complexes
-  it will fold well. Within one target's 256 samples it is near zero — including <span
+  it will fold well. Within one target's 512 samples it is near zero — including <span
   class="mono">ipTM</span>, the model's own confidence in the interface and the score the field
   ranks antibody–antigen poses with.</p>
   <div class="card">
@@ -367,7 +427,7 @@ select {
   <h3>What this is</h3>
   <p>Four independently trained predictors — Boltz-2, OpenDDE-abag and Protenix-v2, which are
   AF3-style all-atom diffusion co-folders, plus ESMFold2, a single-sequence folder — each sampled
-  to 256 structures per target on the AbAg-XM panel, every structure scored with DockQ against
+  to 512 structures per target on the AbAg-XM panel, every structure scored with DockQ against
   the experimental reference. <span id="n-samples">–</span> labelled samples, folded on
   Tenstorrent Wormhole Galaxy hardware.</p>
   <p>They are not four views of the same model, and they do not fail on the same targets: the
@@ -389,28 +449,53 @@ select {
   than pose-level, the price of model diversity against sampling depth at measured compute, and a
   pre-declared null on fixing selection with the scores a model already returns.</p>
 
-  <h3>Limitations</h3>
+  <h3>Limitations, denominators and provenance</h3>
   <ul>
-    <li><b>161 of the 164 panel targets are scorable.</b> Three (9ly2, 9ly3, 9lz2) are three-way
-    antibody–antigen hetero-hexamers the DockQ scorer's interface model does not support, so they
-    carry no labels at all. Per-model counts are lower again, for three separate reasons, none of
-    them a modelling or biology decision: <span id="lim-panel">–</span></li>
-    <li><b>What those three reasons are.</b> <i>Device memory</i> — four targets exceed the
-    32-chip Galaxy's per-chip DRAM at the padded token counts they need, and were dropped before
-    any structure was scored. <i>Short pool</i> — the target's 256-sample run never finished all
-    four 64-sample chunks. <i>Mis-fold</i> — one target, OpenDDE-abag on 9sbb, folds into a
-    pTM 0.67–0.70 basin on the Galaxy against 0.91 for the same input refolded on Blackhole
-    (DockQ 0.02 against 0.88 under the same scorer); a scan of 41 paired targets found it the
-    only such case.</li>
-    <li><b>Data cut-off <span id="lim-cutoff">–</span>.</b> Six 64-sample chunks finished after
-    the freeze and are not in the analysis; a later cut would complete three more targets. Three
-    targets added to a 153–160 panel of bounded per-target means can move a mean by at most 0.02
-    in the worst case, an order of magnitude inside the intervals here.</li>
-    <li><b>N = 256 is a decision cap, not a measured knee.</b> Three of four models were still
-    gaining at the cap. Nothing here says sampling saturates.</li>
-    <li>Epitope and CDR labels are partial for Protenix-v2 and ESMFold2. The epitope chart states
-    its own n and label depth; shallower labels can only inflate a model's "never finds the site"
-    share, and the control on that chart bounds the effect.</li>
+    <li><b>The panel is complete: <span id="lim-cells">–</span> model–target cells.</b> Every cell
+    is <span id="lim-depth">–</span> samples deep, by construction — no cell is shallower, so the
+    headline N is not an average over a ragged panel. Two things keep a cell out of the analysis
+    and neither is missing data. Three of the 164 targets (9ly2, 9ly3, 9lz2) are three-way
+    antibody–antigen hetero-hexamers whose interface the DockQ scorer does not resolve, in any
+    model, so they carry no labels at all. And one cell is dropped as a <i>mis-fold</i>:
+    OpenDDE-abag on 9sbb folds into a pTM 0.67–0.70 basin on the Galaxy against 0.91 for the same
+    input refolded on Blackhole (DockQ 0.02 against 0.88 under the same scorer); a scan of 41
+    paired targets found it the only such case. Per model:
+    <span id="lim-panel">–</span></li>
+    <li><b>Code provenance, and we would rather you heard it from us.</b> No cell in this panel was
+    folded by tt-bio as it stands on main today; the campaign deliberately ran one frozen engine
+    tree so every cell is comparable. <span id="lim-offtree">–</span> cells — on the four largest
+    targets, which needed memory fixes that were not in that tree — were folded on two later trees,
+    each cell entirely on one tree. Those fixes are bit-exact at their own gates, but the trees are
+    not byte-identical and we do not claim they are. Every headline is therefore computed with
+    those cells included and excluded: the largest movement in any of them is
+    <b><span id="lim-leaveout">–</span></b>, and <span id="lim-leaveout-ok">–</span>. One
+    concession: the exact commit of the later tree is not recoverable, because its stamp was
+    inherited when the tree was copied.</li>
+    <li><b>The oracle is an upper bound, not an achievable number.</b> "Best in the pool" is
+    computed with the answer key, which is what oracle-best-of-N means throughout this literature.
+    It cannot leak into the delivered number: the two curves share only the weighting, differ only
+    in what they sort by, and the one tie-break that touches both resolves <i>against</i> the
+    selector, so every delivered figure here is the conservative one.</li>
+    <li><b>Pooling checks.</b> Truncating each 512-sample pool back to its first 256 reproduces our
+    published N=256 statistics exactly, on 635 of the 643 analysed cells (the other 8 have no
+    complete 256 rung to nest against, so they are unchecked rather than failed). Every analysed
+    cell holds exactly <span id="lim-trunc">–</span> rows, and repeated structures within a pool:
+    <span id="lim-dup">–</span>.</li>
+    <li><b>Seeds are per model and per chunk, so they are shared across targets.</b> Independence
+    across targets comes from the inputs differing, not the draws differing — the diffusion noise
+    tensor is target-shaped, so no two targets receive the same noise. The four models' seed blocks
+    are pairwise disjoint.</li>
+    <li><b>Epitope and CDR claims are quoted at their own depth, never at 512.</b> Those labels are
+    partial, badly so for ESMFold2's CDR-H3. Mean samples labelled per target:
+    <span id="lim-depth-secondary">–</span>. Doubling the sample count did not double these.</li>
+    <li><b>One selector is stored on a coarse grid</b> — <span id="lim-ties">–</span> — so ties are
+    common, and our tie-break credits the selector with the worse of two samples it cannot
+    separate. That is the direction that flatters the headline, so we measured it: resolving ties
+    the other way moves its delivered DockQ by <span id="lim-ties-shift">–</span>, far inside the
+    interval.</li>
+    <li><b>Cost basis.</b> <span id="lim-wall">–</span> analysed samples carry no measured wall
+    time, because their fleet record landed under the wrong rung label. The cost model takes a
+    per-target median, so three targets' cost rests on seven of their eight chunks.</li>
     <li>Four specific models at specific settings. ESMFold2 runs single-sequence; OpenDDE-abag is
     antibody-specialised, so its lead is not a general co-folding result.</li>
     <li>This measures each model's own shipped confidence, not published rankers. The PAE-based
@@ -420,16 +505,43 @@ select {
     closes the gap is untested here.</li>
   </ul>
 
+  <h3>What changed from our first release</h3>
+  <p>That release ran to 256 samples per target. This one runs to 512 on a complete panel, and
+  several things we said then do not survive it. We would rather delete a claim than quietly keep
+  it.</p>
+  <ul>
+    <li><b>"Effective N is 1 to 3 samples" is no longer the headline.</b> It was one reading of a
+    flatter fact: effective N does not grow with N at all, so selection efficiency falls as 1/N.
+    The number is still there, now as one point on a law.</li>
+    <li><b>"No knee at 512" is withdrawn.</b> The gap's second difference is negative with an
+    interval excluding zero in two of the four models. The ceiling itself still shows no
+    saturation.</li>
+    <li><b>"Delivered quality declines with N for OpenDDE-abag" is withdrawn as a headline.</b> We
+    registered that test in advance at k = 8 and it came back −0.0072 [−0.0148, +0.0006], crossing
+    zero. It is reported in the findings document with its interval. The interval at k = 16 does
+    exclude zero, and we are deliberately not promoting it — moving to whichever k clears the bar
+    is the exact error the pre-registration exists to prevent. What replaced it is stronger: the
+    tail inversion above, which is measured against its own control.</li>
+    <li><b>The cost-to-80% fit ran over 1..256 and now runs over 1..512</b>, and reports how much
+    the answer depends on where the data stops.</li>
+    <li><b>The exclusion lists are gone.</b> The four targets we could not fold for device-memory
+    reasons, and the five whose pools were short, are all complete now. So is the data cut-off.</li>
+    <li><b>One correction to the panel itself.</b> Our completeness check counted label files
+    rather than labels, and one cell of 656 carried a full set of scorer-error placeholders behind
+    a well-formed file. It is fixed, rescored and included, and the check now counts populated
+    values.</li>
+  </ul>
+
   <h3>Reproduce</h3>
   <ul>
     <li><b>Models</b> — Boltz-2, OpenDDE-abag, Protenix-v2, ESMFold2 as shipped in tt-bio at
     commit <span class="mono">6d352084c</span>, stock checkpoints, inference only.</li>
     <li><b>Targets</b> — the AbAg-XM panel, 164 antibody–antigen complexes, 161 of them scorable,
     each with an experimentally solved reference.</li>
-    <li><b>Depth and seeds</b> — 256 samples per target per model, run as four 64-sample chunks.
+    <li><b>Depth and seeds</b> — 512 samples per target per model, run as eight 64-sample chunks.
     Base seed 40000 Boltz-2, 20000 OpenDDE-abag, 30000 Protenix-v2, 50000 ESMFold2; chunk
     <i>j</i> uses base + 1000·<i>j</i>, so the shallower rungs are exact prefixes of the deeper
-    ones.</li>
+    ones and the 512-sample pool is a strict superset of every rung below it.</li>
     <li><b>Settings</b> — the three co-folders fold with MSAs served from a precomputed cache
     (<span class="mono">--msa_cache_only --max_parallel_samples 5</span>, Boltz-2 8); ESMFold2 is
     single-sequence (<span class="mono">--single_sequence --recycling_steps 10 --sampling_steps
@@ -578,7 +690,287 @@ const METRICS = [
   { v: 'high', t: '≥ 0.80' },
 ];
 
-// ---------------------------------------------------------------- 1. the gap
+// Log-x line chart shared by the delivered, effective-N and tail figures: one series per model,
+// optional CI band, optional dashed control series, direct end labels.
+function logLines(hostId, tipId, { xs, series, ylab, xlab, xt, hi, lo = 0, band, ctrl,
+                                  yfmt = (v => v.toFixed(1)), tipfmt } = {}) {
+  const host = document.getElementById(hostId), tip = document.getElementById(tipId);
+  const wrap = host.parentElement;
+  const tight = window.innerWidth < 620;
+  const f = frame(host, { h: tight ? 270 : 330, ml: 54, mr: tight ? 14 : 62 });
+  const lx = Math.log2(xs[0]), hx = Math.log2(xs[xs.length - 1]);
+  const x = v => f.ml + (Math.log2(v) - lx) / (hx - lx) * f.iw;
+  const y = v => f.mt + f.ih - ((v - lo) / (hi - lo)) * f.ih;
+  const step = (hi - lo) <= 0.25 ? 0.05 : (hi - lo) <= 0.6 ? 0.1 : (hi - lo) <= 3 ? 0.5 : 1;
+  const yts = []; for (let v = lo; v <= hi + 1e-9; v += step) yts.push(+v.toFixed(3));
+  yaxis(f, y, yts, yfmt);
+  xticks(f, x, xt);
+  axlabel(f, xlab, 'x'); axlabel(f, ylab, 'y');
+
+  const ends = [];
+  MODELS.forEach((m, i) => {
+    if (band && series[m].lo) bandfill(f, xs, series[m].lo, series[m].hi, x, y, hue(i));
+    if (ctrl && ctrl[m]) path(f, xs, ctrl[m].mean, x, y, hue(i), true);
+    path(f, xs, series[m].mean, x, y, hue(i), false);
+    ends.push({ y: y(series[m].mean[series[m].mean.length - 1]), c: hue(i), t: SHORT[m] });
+  });
+  if (!tight) declutter(ends, 14).forEach(e => {
+    const t = el('text', { x: f.w - f.mr + 6, y: e.y + 4, class: 'dlabel', fill: e.c }, f.svg);
+    t.style.fontSize = '11.5px';
+    t.textContent = e.t;
+  });
+
+  const cross = el('line', { y1: f.mt, y2: f.mt + f.ih, class: 'gridline',
+    stroke: css('--muted-2'), 'stroke-width': 1, opacity: 0 }, f.svg);
+  const hit = el('rect', { x: f.ml, y: f.mt, width: f.iw, height: f.ih,
+    fill: 'transparent' }, f.svg);
+  const move = ev => {
+    const r = f.svg.getBoundingClientRect();
+    const px = ((ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left) * (f.w / r.width);
+    const kv = Math.pow(2, lx + Math.max(0, Math.min(1, (px - f.ml) / f.iw)) * (hx - lx));
+    let bi = 0; xs.forEach((k, i) => { if (Math.abs(k - kv) < Math.abs(xs[bi] - kv)) bi = i; });
+    cross.setAttribute('x1', x(xs[bi])); cross.setAttribute('x2', x(xs[bi]));
+    cross.setAttribute('opacity', 1);
+    tipAt(tip, wrap, x(xs[bi]), f.mt + 4, tipfmt(bi));
+  };
+  hit.addEventListener('pointermove', move);
+  hit.addEventListener('pointerdown', move);
+  hit.addEventListener('pointerleave',
+    () => { tip.style.opacity = 0; cross.setAttribute('opacity', 0); });
+  return f;
+}
+
+// ---------------------------------------------------------------- 1. what you actually get
+function drawDeliv2() {
+  const q = D.q1_selection.per_model, ks = q.boltz2.k_grid;
+  // Both curves against their own single-draw baseline: the question is what drawing more BUYS,
+  // and the raw levels differ so much between models that plotting them hides the shape. Band on
+  // the delivered gain only -- that is the claim; the ceiling's gain is an order of magnitude
+  // larger and separates by size alone.
+  let hi = 0, lo = 0;
+  MODELS.forEach(m => {
+    hi = Math.max(hi, ...q[m].oracle_gain_from_1.mean);
+    lo = Math.min(lo, ...q[m].user_gain_from_1.lo);
+  });
+  hi = Math.ceil(hi * 20) / 20; lo = Math.floor(lo * 20) / 20;
+  logLines('c-deliv2', 'tip-deliv2', {
+    xs: ks, series: Object.fromEntries(MODELS.map(m => [m, q[m].user_gain_from_1])), band: true,
+    ctrl: Object.fromEntries(MODELS.map(m => [m, q[m].oracle_gain_from_1])),
+    hi, lo, xt: [1, 4, 16, 64, 256, 512], xlab: 'samples drawn',
+    ylab: 'DockQ gained over a single draw', yfmt: v => v.toFixed(2),
+    tipfmt: bi => `<h4>N = ${ks[bi]} · gained over one draw</h4>` + MODELS.map((m, i) => {
+      const u = q[m].user_gain_from_1, o = q[m].oracle_gain_from_1;
+      return `<div class="row"><span class="k"><i style="background:${hue(i)}"></i>${SHORT[m]}</span>`
+        + `<b>${u.mean[bi] >= 0 ? '+' : ''}${u.mean[bi].toFixed(3)} `
+        + `<span style="color:var(--muted);font-weight:400">[${u.lo[bi].toFixed(3)}, `
+        + `${u.hi[bi].toFixed(3)}] · best +${o.mean[bi].toFixed(3)}</span></b></div>`;
+    }).join(''),
+  });
+  legend(document.getElementById('lg-deliv2'), [
+    { c: css('--muted'), t: 'solid = what you receive' },
+    { c: css('--muted'), t: 'dashed = best in the pool', dash: 1 },
+    ...MODELS.map((m, i) => ({ c: hue(i), t: LABEL[m] })),
+  ]);
+  // A 393px viewport cannot hold eight columns of value-plus-interval without overflowing, and
+  // overflow is a hard no. Narrow screens get the three k values the claim turns on; the full
+  // grid is on desktop and every k is in the findings document.
+  const KS = window.innerWidth < 620 ? ['8', '32', '128']
+    : ['1', '8', '16', '32', '64', '128', '256'];
+  table(document.getElementById('tb-deliv2'), ['model', ...KS.map(k => 'vs k=' + k)],
+    MODELS.map(m => [LABEL[m], ...KS.map(k => {
+      const d = q[m].delivered_delta_from_k[k];
+      const zero = d.lo <= 0 && 0 <= d.hi;
+      return `${d.mean >= 0 ? '+' : ''}${d.mean.toFixed(4)}`
+        + `<br><span style="color:var(--${zero ? 'muted' : 'ink-soft'});font-size:11px">`
+        + `[${d.lo.toFixed(4)}, ${d.hi.toFixed(4)}]${zero ? '' : ' *'}</span>`;
+    })]));
+}
+
+// ---------------------------------------------------------------- 2. the effective-N law
+function drawLaw() {
+  const q = D.q1_selection.per_model, ns = q.boltz2.effective_n_law.n_grid;
+  let hi = 1;
+  MODELS.forEach(m => { hi = Math.max(hi, ...q[m].effective_n_law.n_eff.hi); });
+  hi = Math.ceil(hi * 2) / 2;
+  logLines('c-law', 'tip-law', {
+    xs: ns, series: Object.fromEntries(MODELS.map(m => [m, q[m].effective_n_law.n_eff])),
+    band: true, hi, lo: 1, xt: ns.filter(n => [2, 8, 32, 128, 512].includes(n)),
+    xlab: 'samples drawn (N)', ylab: 'effective N', yfmt: v => v.toFixed(1),
+    tipfmt: bi => `<h4>N = ${ns[bi]} · effective N</h4>` + MODELS.map((m, i) => {
+      const e = q[m].effective_n_law.n_eff;
+      return `<div class="row"><span class="k"><i style="background:${hue(i)}"></i>${SHORT[m]}</span>`
+        + `<b>${e.mean[bi].toFixed(2)} <span style="color:var(--muted);font-weight:400">`
+        + `(${(100 * e.mean[bi] / ns[bi]).toFixed(2)}% of draws)</span></b></div>`;
+    }).join(''),
+  });
+  legend(document.getElementById('lg-law'), MODELS.map((m, i) => ({ c: hue(i), t: LABEL[m] })));
+  document.getElementById('law-foot').innerHTML =
+    'A flat line is the 1/N law. OpenDDE-abag sits on a floor: effective N is reported as exactly '
+    + '1.00 wherever a perfect chooser\'s first draw already matches what the model delivers from N, '
+    + 'so its fitted slope is a floor artifact rather than a measurement ('
+    + (100 * D.q1_selection.per_model['opendde-abag'].effective_n_law.frac_at_floor).toFixed(0)
+    + '% of its grid).';
+  const wide = window.innerWidth >= 620;
+  table(document.getElementById('tb-law'),
+    ['model', ...(wide ? ['eff. N @2', '@32'] : []), 'eff. N @512', 'efficiency @512',
+     'slope b (0 = flat)'],
+    MODELS.map(m => {
+      const L = q[m].effective_n_law, e = L.n_eff.mean, ef = L.efficiency, b = L.slope_b;
+      const i512 = L.n_grid.length - 1;
+      return [LABEL[m], ...(wide ? [e[0].toFixed(2), e[L.n_grid.indexOf(32)].toFixed(2)] : []),
+        e[i512].toFixed(2), `${(100 * ef.mean[i512]).toFixed(3)}%`,
+        `${b.mean >= 0 ? '+' : ''}${b.mean.toFixed(3)}<br>`
+        + `<span style="color:var(--muted);font-size:11px">[${b.lo.toFixed(3)}, `
+        + `${b.hi.toFixed(3)}]</span>`];
+    }));
+}
+
+// ---------------------------------------------------------------- 3. the tail mechanism
+function drawTail() {
+  const t = D.robustness.tail_range_null, TOP = D.provenance.top_rung;
+  // x is the tail size in samples, ascending, so the axis reads as "how many of the best you
+  // look at" and the whole-pool point sits at the right.
+  const xs = D.q2_confidence.boltz2.tail_sizes.slice().sort((a, b) => a - b);
+  const pick = (m, key) => ({ mean: xs.map(k => t[m].sizes[String(k)][key].mean) });
+  let hi = 0, lo = 0;
+  MODELS.forEach(m => xs.forEach(k => {
+    ['rho_tail', 'rho_random_same_size'].forEach(key => {
+      hi = Math.max(hi, t[m].sizes[String(k)][key].mean);
+      lo = Math.min(lo, t[m].sizes[String(k)][key].mean);
+    });
+  }));
+  hi = Math.ceil(hi * 20) / 20; lo = Math.floor(lo * 20) / 20;
+  logLines('c-tail', 'tip-tail', {
+    xs, series: Object.fromEntries(MODELS.map(m => [m, pick(m, 'rho_tail')])),
+    ctrl: Object.fromEntries(MODELS.map(m => [m, pick(m, 'rho_random_same_size')])),
+    hi, lo, xt: xs, xlab: 'samples considered, taken from the top by confidence',
+    ylab: 'rank correlation with DockQ', yfmt: v => v.toFixed(2),
+    tipfmt: bi => `<h4>top ${xs[bi]} of ${TOP} · tail / random</h4>` + MODELS.map((m, i) => {
+      const a = t[m].sizes[String(xs[bi])];
+      return `<div class="row"><span class="k"><i style="background:${hue(i)}"></i>${SHORT[m]}</span>`
+        + `<b>${a.rho_tail.mean.toFixed(3)} <span style="color:var(--muted);font-weight:400">`
+        + `/ ${a.rho_random_same_size.mean.toFixed(3)}</span></b></div>`;
+    }).join(''),
+  });
+  legend(document.getElementById('lg-tail'), [
+    { c: css('--muted'), t: 'solid = top-of-pool by confidence' },
+    { c: css('--muted'), t: 'dashed = random subset, same size', dash: 1 },
+    ...MODELS.map((m, i) => ({ c: hue(i), t: LABEL[m] })),
+  ]);
+  document.getElementById('tail-foot').textContent =
+    `The rightmost point is the whole pool of ${TOP}, where the two lines coincide by `
+    + 'construction. EXPLORATORY: four models by three tail depths, each with its own control, '
+    + 'every cell reported with its interval. * marks an interval excluding zero.';
+  const KS = xs.filter(k => k < TOP);
+  table(document.getElementById('tb-tail'), ['model', ...KS.map(k => `top ${k}`)],
+    MODELS.map(m => [LABEL[m], ...KS.map(k => {
+      const d = t[m].sizes[String(k)].tail_minus_null;
+      const zero = d.lo <= 0 && 0 <= d.hi;
+      return `${d.mean >= 0 ? '+' : ''}${d.mean.toFixed(3)}`
+        + `<br><span style="color:var(--${zero ? 'muted' : 'ink-soft'});font-size:11px">`
+        + `[${d.lo.toFixed(3)}, ${d.hi.toFixed(3)}]${zero ? '' : ' *'}</span>`;
+    })]));
+}
+
+// ---------------------------------------------------------------- 4. cost to 80%
+function drawCost() {
+  const host = document.getElementById('c-cost'), tip = document.getElementById('tip-cost');
+  const wrap = host.parentElement;
+  const q1 = D.q1_selection.per_model, q6 = D.q6_forecast.per_model;
+  const ks = q1.boltz2.k_grid, TOP = D.provenance.top_rung;
+  const FRAC = D.q6_forecast.target_frac;
+  // How far to draw the extrapolation: the largest fitted N that is finite, capped so one
+  // astronomical model does not squash the measured region into the axis.
+  const needs = MODELS.map(m => q6[m].n_for_80pct.acceptable.log_n).filter(v => v);
+  const xmax = Math.min(Math.max(...needs, TOP * 4), 1e6);
+  const tight = window.innerWidth < 620;
+  const f = frame(host, { h: tight ? 270 : 330, ml: 54, mr: tight ? 14 : 62 });
+  const lx = Math.log2(1), hx = Math.log2(xmax);
+  const x = v => f.ml + (Math.log2(v) - lx) / (hx - lx) * f.iw;
+  const y = v => f.mt + f.ih - v * f.ih;
+  yaxis(f, y, [0, 0.2, 0.4, 0.6, 0.8, 1.0], v => Math.round(v * 100) + '%');
+  const xt = [1, 16, 512]; for (let e = 4; Math.pow(10, e) <= xmax; e += 2) xt.push(Math.pow(10, e));
+  xticks(f, x, xt, v => v >= 1e4 ? '10' + String(Math.round(Math.log10(v))).replace(/./g,
+    c => '⁰¹²³⁴⁵⁶⁷⁸⁹'[+c]) : String(v));
+  axlabel(f, 'samples drawn', 'x');
+  axlabel(f, 'targets with an acceptable pose', 'y');
+
+  // the 80% line, and the wall where measurement stops
+  const g80 = el('line', { x1: f.ml, x2: f.w - f.mr, y1: y(FRAC), y2: y(FRAC),
+    stroke: css('--muted-2'), 'stroke-width': 1, 'stroke-dasharray': '2 3' }, f.svg);
+  el('line', { x1: x(TOP), x2: x(TOP), y1: f.mt, y2: f.mt + f.ih, stroke: css('--ink-soft'),
+    'stroke-width': 1.2 }, f.svg);
+  const wall = el('text', { x: x(TOP) - 6, y: f.mt + 12, 'text-anchor': 'end', class: 'dlabel',
+    fill: css('--ink-soft') }, f.svg);
+  wall.style.fontSize = '11px';
+  wall.textContent = 'data ends at ' + TOP;
+
+  const ends = [];
+  MODELS.forEach((m, i) => {
+    const meas = q1[m].thresholds.acceptable.oracle.mean;
+    path(f, ks, meas, x, y, hue(i), false);
+    const lg = q6[m].fits.frac_acceptable.log, need = q6[m].n_for_80pct.acceptable.log_n;
+    if (need) {
+      const pts = [];
+      for (let e = Math.log2(TOP); e <= Math.log2(Math.min(need, xmax)); e += 0.25)
+        pts.push(Math.pow(2, e));
+      pts.push(Math.min(need, xmax));
+      path(f, pts, pts.map(n => Math.min(1, lg.c + lg.d * Math.log2(n))), x, y, hue(i), true);
+      ends.push({ y: y(Math.min(1, lg.c + lg.d * Math.log2(Math.min(need, xmax)))),
+                  c: hue(i), t: SHORT[m] });
+    } else ends.push({ y: y(meas[meas.length - 1]), c: hue(i), t: SHORT[m] });
+  });
+  if (!tight) declutter(ends, 14).forEach(e => {
+    const t = el('text', { x: f.w - f.mr + 6, y: e.y + 4, class: 'dlabel', fill: e.c }, f.svg);
+    t.style.fontSize = '11.5px';
+    t.textContent = e.t;
+  });
+  legend(document.getElementById('lg-cost'), [
+    { c: css('--muted'), t: 'solid = MEASURED to 512' },
+    { c: css('--muted'), t: 'dashed = DERIVED, log-linear fit', dash: 1 },
+    ...MODELS.map((m, i) => ({ c: hue(i), t: LABEL[m] })),
+  ]);
+  tip.style.opacity = 0;
+
+  const deg = MODELS.filter(m => {
+    const p = q6[m].fits.frac_acceptable.power;
+    return !p || p.degenerate;
+  }).length;
+  const ratios = MODELS.map(m =>
+    q6[m].n_for_80pct.acceptable.fit_range_sensitivity.log_ratio).filter(v => v);
+  document.getElementById('cost-foot').innerHTML =
+    `The saturating family <span class="mono">a − b·N^(−α)</span> is degenerate for ${deg} of the `
+    + 'four: bounded by the metric\'s own ceiling it walks its asymptote to 100% and collapses into '
+    + `the log fit, so it returns no finite sample count. Doubling the measured range to ${TOP} `
+    + `moved these acceptable-band forecasts by ${Math.min(...ratios).toFixed(2)}× to `
+    + `${Math.max(...ratios).toFixed(2)}×. Where the two fit ranges disagree by more than about 2× `
+    + 'we print no number at all — see the table.';
+
+  // The ratio column IS the fit-range evidence, so it survives on narrow screens; the raw
+  // 1..256 fit and the cost conversion are the two that fold away.
+  const wide = window.innerWidth >= 620;
+  const rows = [];
+  ['acceptable', 'medium'].forEach(name => {
+    MODELS.forEach(m => {
+      const s = q6[m].n_for_80pct[name], fs = s.fit_range_sensitivity;
+      const r = fs.log_ratio, unstable = r && (r > 2 || r < 0.5);
+      rows.push([`${SHORT[m]} · ≥ ${name === 'acceptable' ? '0.23' : '0.49'}`,
+        (100 * s[`measured_at_${TOP}`]).toFixed(1) + '%',
+        unstable ? '<b>unstable</b>' : sci(fs.log_n_fit_1_512),
+        ...(wide ? [unstable ? '–' : (s.log_card_h_per_target < 1000
+          ? s.log_card_h_per_target.toFixed(1) : sci(s.log_card_h_per_target)),
+          sci(fs.log_n_fit_1_256)] : []),
+        r ? r.toFixed(2) + '×' : '–']);
+    });
+  });
+  table(document.getElementById('tb-cost'),
+    ['model · bar', `measured @${TOP}`, 'N for 80%', ...(wide ? ['card-h/target',
+     'same, fit 1..256'] : []), 'fit-range ratio'], rows);
+}
+const sci = v => v == null ? '–' : v < 1e4 ? String(Math.round(v))
+  : v.toExponential(1).replace('e+', ' × 10^');
+
+// ---------------------------------------------------------------- 5. the gap
 function drawGap() {
   const host = document.getElementById('c-gap'), tip = document.getElementById('tip-gap');
   const wrap = host.parentElement;
@@ -594,12 +986,12 @@ function drawGap() {
 
   const tight = window.innerWidth < 620;
   const f = frame(host, { h: tight ? 270 : 330, ml: 38, mr: tight ? 14 : 62 });
-  const lx = Math.log2(1), hx = Math.log2(256);
+  const lx = Math.log2(1), hx = Math.log2(ks[ks.length - 1]);
   const x = v => f.ml + (Math.log2(v) - lx) / (hx - lx) * f.iw;
   const y = v => f.mt + f.ih - (v / hi) * f.ih;
   const yt = []; for (let v = 0; v <= hi + 1e-9; v += hi <= 0.4 ? 0.1 : 0.2) yt.push(+v.toFixed(2));
   yaxis(f, y, yt, v => isFrac ? Math.round(v * 100) + '%' : v.toFixed(1));
-  xticks(f, x, [1, 4, 16, 64, 256]);
+  xticks(f, x, [1, 4, 16, 64, 256, 512]);
   axlabel(f, 'samples drawn', 'x');
   axlabel(f, isFrac ? 'targets reaching it' : 'DockQ', 'y');
 
@@ -649,81 +1041,22 @@ function drawGap() {
     ...MODELS.map((m, i) => ({ c: hue(i), t: LABEL[m] })),
   ]);
   const s = v => isFrac ? (v * 100).toFixed(1) + '%' : v.toFixed(3);
+  const TOP = ks[ks.length - 1];
+  // Six columns do not fit a 393px viewport, and content wider than the viewport makes the whole
+  // page lay out wider. The @16 pair folds away; the second difference is the new evidence.
+  const wide = window.innerWidth >= 620;
   table(document.getElementById('tb-gap'),
-    ['model', 'best @16', 'delivered @16', 'best @256', 'delivered @256'],
+    ['model', ...(wide ? ['best @16', 'delivered @16'] : []), `best @${TOP}`,
+     `delivered @${TOP}`, 'gap 2nd difference'],
     MODELS.map(m => {
       const o = pull(m, 'oracle').mean, u = pull(m, 'user').mean;
       const i16 = ks.indexOf(16), i2 = ks.length - 1;
-      return [LABEL[m], s(o[i16]), s(u[i16]), s(o[i2]), s(u[i2])];
+      const d = q[m].gap_second_difference, zero = d.lo <= 0 && 0 <= d.hi;
+      return [LABEL[m], ...(wide ? [s(o[i16]), s(u[i16])] : []), s(o[i2]), s(u[i2]),
+        `${d.mean >= 0 ? '+' : ''}${d.mean.toFixed(4)}<br>`
+        + `<span style="color:var(--${zero ? 'muted' : 'ink-soft'});font-size:11px">`
+        + `[${d.lo.toFixed(4)}, ${d.hi.toFixed(4)}]${zero ? '' : ' *'}</span>`];
     }));
-}
-
-// ---------------------------------------------------------------- 2. effective N
-function drawNeff() {
-  const host = document.getElementById('c-neff'), tip = document.getElementById('tip-neff');
-  const wrap = host.parentElement;
-  const q = D.q1_selection.per_model;
-  const rows = [];
-  MODELS.forEach(m => {
-    rows.push({ m, lab: 'mean DockQ', d: q[m].effective_n });
-    ['acceptable', 'medium'].forEach(t =>
-      rows.push({ m, lab: t === 'acceptable' ? '≥ 0.23' : '≥ 0.49', d: q[m].thresholds[t].effective_n }));
-  });
-  const maxv = Math.max(...rows.map(r => r.d.hi), 16);
-  const narrow = window.innerWidth < 620;
-  const fs = narrow ? 10 : 11.5;
-  rows.forEach(r => r.text = (narrow ? SHORT[r.m] : LABEL[r.m]) + ' · ' + r.lab);
-  const f = frame(host, { h: 34 + rows.length * (narrow ? 22 : 26),
-    ml: labelMargin(rows.map(r => r.text), fs, narrow ? 132 : 190), mr: 42, mt: 8, mb: 26 });
-  const bh = f.ih / rows.length;
-  const x = v => f.ml + (v / maxv) * f.iw;
-  const xt = [1, 4, 8, 16].filter(v => v <= maxv);
-  const g = el('g', { class: 'axis' }, f.svg);
-  xt.forEach(v => {
-    el('line', { x1: x(v), x2: x(v), y1: f.mt, y2: f.mt + f.ih, class: 'gridline' }, g);
-    const t = el('text', { x: x(v), y: f.mt + f.ih + 16, 'text-anchor': 'middle' }, g);
-    t.textContent = v;
-  });
-  axlabel(f, 'samples a perfect chooser would have needed', 'x');
-
-  rows.forEach((r, i) => {
-    const cy = f.mt + i * bh + bh / 2, c = hue(MODELS.indexOf(r.m));
-    const bw = Math.max(2, x(r.d.mean) - f.ml);
-    el('rect', { x: f.ml, y: cy - bh * 0.28, width: bw, height: bh * 0.56, rx: 3,
-      fill: c }, f.svg);
-    el('line', { x1: x(r.d.lo), x2: x(r.d.hi), y1: cy, y2: cy, stroke: css('--ink'),
-      'stroke-width': 1.5, opacity: 0.55 }, f.svg);
-    [r.d.lo, r.d.hi].forEach(v => el('line', { x1: x(v), x2: x(v), y1: cy - 4, y2: cy + 4,
-      stroke: css('--ink'), 'stroke-width': 1.5, opacity: 0.55 }, f.svg));
-    const lt = el('text', { x: f.ml - 8, y: cy + 3.5, 'text-anchor': 'end', class: 'axis' }, f.svg);
-    lt.setAttribute('fill', css('--ink-soft'));
-    lt.style.fontSize = fs + 'px';
-    lt.style.fontFamily = 'var(--sans)';
-    lt.textContent = r.text;
-    const vt = el('text', { x: Math.min(x(r.d.hi) + 7, f.w - 4), y: cy + 3.5,
-      class: 'axis', 'text-anchor': x(r.d.hi) + 7 > f.w - 4 ? 'end' : 'start' }, f.svg);
-    vt.setAttribute('fill', css('--muted')); vt.textContent = r.d.mean.toFixed(1);
-    const hz = el('rect', { x: f.ml, y: cy - bh / 2, width: f.iw, height: bh,
-      fill: 'transparent' }, f.svg);
-    hz.addEventListener('pointerenter', () => tipAt(tip, wrap, x(r.d.mean), cy - 52,
-      `<h4>${LABEL[r.m]} · ${r.lab}</h4><div class="row"><span class="k">effective N</span>`
-      + `<b>${r.d.mean.toFixed(2)}</b></div><div class="row"><span class="k">95% CI</span>`
-      + `<b>${r.d.lo.toFixed(2)} – ${r.d.hi.toFixed(2)}</b></div>`));
-    hz.addEventListener('pointerleave', () => tip.style.opacity = 0);
-  });
-  legend(document.getElementById('lg-neff'),
-    MODELS.map((m, i) => ({ c: hue(i), t: LABEL[m] })));
-
-  // 1.0 is the floor of this measure, not a precise reading -- name the models sitting on it and
-  // why, so nobody reads the flat bar as an unusually confident result.
-  const floored = MODELS.filter(m => q[m].effective_n.mean <= 1.0001);
-  document.getElementById('neff-foot').textContent = floored.length
-    ? `1.0 is the floor: ${floored.map(m => LABEL[m]).join(' and ')} `
-      + `${floored.length > 1 ? 'deliver' : 'delivers'} from 256 samples `
-      + `what a single draw averages (${q[floored[0]].user.mean.slice(-1)[0].toFixed(3)} against `
-      + `${q[floored[0]].random_baseline.mean.toFixed(3)}), so the curve is already met at k = 1 `
-      + `and nothing below 1 is measurable.`
-    : '';
 }
 
 // ---------------------------------------------------------------- 3. confidence
@@ -899,7 +1232,7 @@ function drawBeat() {
   }
   el('line', { x1: x(0), x2: x(0), y1: f.mt, y2: f.mt + f.ih, stroke: css('--ink'),
     'stroke-width': 1.5, opacity: 0.45 }, f.svg);
-  axlabel(f, 'delivered DockQ vs the shipped selector, at N = 256', 'x');
+  axlabel(f, `delivered DockQ vs the shipped selector, at N = ${D.provenance.top_rung}`, 'x');
 
   rows.forEach((r, i) => {
     const cy = f.mt + i * bh + bh / 2, c = hue(MODELS.indexOf(r.m));
@@ -1121,8 +1454,8 @@ function drawExplore() {
 
 // ---------------------------------------------------------------- boot
 function redraw() {
-  drawGap(); drawNeff(); drawConf(); drawEpi(); drawBeat(); drawPareto(); drawDelivered();
-  drawExplore();
+  drawDeliv2(); drawLaw(); drawTail(); drawGap(); drawCost();
+  drawConf(); drawEpi(); drawBeat(); drawPareto(); drawDelivered(); drawExplore();
 }
 
 // How much less compute the even four-way split needs to match the best single model
@@ -1137,16 +1470,19 @@ function cheaperBy() {
 }
 
 function tiles() {
-  const q = D.q1_selection.per_model;
+  const q = D.q1_selection.per_model, p = D.provenance;
   const ns = MODELS.map(m => q[m].effective_n.mean);
   document.getElementById('t-neff').innerHTML =
     `${Math.min(...ns).toFixed(1)}–${Math.max(...ns).toFixed(1)}`;
-  const rs = MODELS.map(m => D.q2_confidence[m].flavors.selector.within_target.median);
-  document.getElementById('t-rho').innerHTML =
-    `${Math.min(...rs).toFixed(2)}–${Math.max(...rs).toFixed(2)}`;
+  // The headline correlation is the one measured where a selector actually operates: inside its
+  // own top quartile, not over the whole pool.
+  const Q = String(Math.round(p.top_rung / 4));
+  const ts = MODELS.map(m => D.q2_confidence[m].tail_rho[Q].rho.mean);
+  const sgn = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2);
+  document.getElementById('t-tail').innerHTML =
+    `${sgn(Math.min(...ts))} to ${sgn(Math.max(...ts))}`;
   document.getElementById('t-div').innerHTML = `${cheaperBy()}<small>×</small>`;
   document.querySelectorAll('.xfold').forEach(e => e.textContent = cheaperBy() + '×');
-  const p = D.provenance;
   document.getElementById('stamp').textContent =
     `generated ${p.generated_utc} · bootstrap B=${p.bootstrap.B}, seed ${p.bootstrap.seed}`;
 
@@ -1156,8 +1492,46 @@ function tiles() {
     const lo = Math.min(...vs), hi = Math.max(...vs), s = v => (sign && v > 0 ? '+' : '') + v.toFixed(d);
     return lo.toFixed(d) === hi.toFixed(d) ? s(lo) : `${s(lo)} to ${s(hi)}`;
   };
+  const TOP = p.top_rung;
   set('k-samples', (Math.round(p.panel.samples_analysed / 1000) * 1000).toLocaleString('en-US'));
-  set('gapwiden', rng(MODELS.map(m => q[m].gap_widening_16_to_256.mean), 2, true));
+  set('gapwiden', rng(MODELS.map(m => q[m][`gap_widening_16_to_${TOP}`].mean), 2, true));
+
+  // What you actually get: the 32 -> 512 delta, and the ceiling's gain over the same range.
+  const d32 = MODELS.map(m => q[m].delivered_delta_from_k['32']);
+  set('d-delta32', `${rng(d32.map(v => v.mean), 3, true)} DockQ`);
+  const i32 = q.boltz2.k_grid.indexOf(32), iT = q.boltz2.k_grid.length - 1;
+  set('d-oracle32', rng(MODELS.map(m =>
+    q[m].oracle.mean[iT] - q[m].oracle.mean[i32]), 3, true));
+
+  // The law.
+  const law = m => q[m].effective_n_law;
+  const allN = MODELS.flatMap(m => law(m).n_eff.mean);
+  set('law-range', `${Math.min(...allN).toFixed(1)} and ${Math.max(...allN).toFixed(1)}`);
+  set('law-b', rng(MODELS.map(m => law(m).slope_b.mean), 3, true));
+  const effs = MODELS.map(m => 100 * law(m).efficiency.mean.slice(-1)[0]);
+  set('law-eff', `${Math.min(...effs).toFixed(1)}% to ${Math.max(...effs).toFixed(1)}% of them`);
+
+  // The ceiling's rate, and the honest correction on the knee.
+  const dbl = Object.keys(q.boltz2.oracle_gain_per_doubling);
+  set('g-perdbl', rng(MODELS.flatMap(m =>
+    dbl.map(k => q[m].oracle_gain_per_doubling[k].mean)), 3, true));
+  const knee = MODELS.filter(m => q[m].gap_second_difference.hi < 0);
+  set('g-knee', knee.length ? knee.map(m => LABEL[m]).join(' and ')
+    : 'no model, on this panel');
+
+  // Cost. Only the models whose two fit ranges agree get a quoted number.
+  const q6 = D.q6_forecast.per_model;
+  const stable = MODELS.filter(m => {
+    const r = q6[m].n_for_80pct.acceptable.fit_range_sensitivity.log_ratio;
+    return r && r <= 2 && r >= 0.5;
+  });
+  // A fitted N at or below the cap is not an extrapolation at all -- that model already crosses
+  // 80% inside the measured range, and saying otherwise would overstate the uncertainty.
+  set('c-need', stable.map(m => {
+    const n = q6[m].n_for_80pct.acceptable.log_n;
+    return `${SHORT[m]} ${sci(n)}${n <= TOP ? ' (measured, not extrapolated)' : ''}`;
+  }).join(', ') + (stable.length < MODELS.length
+    ? ', and the rest are unstable under the fit range' : ''));
   const f2 = m => D.q3_epitope.per_model[m].f2;
   set('epi-uns', rng(MODELS.map(m => f2(m).max_ej_median_unsolved), 2));
   set('epi-sol', rng(MODELS.map(m => f2(m).max_ej_median_solved), 2));
@@ -1180,17 +1554,57 @@ function tiles() {
   set('rep-cost', MODELS.map(m =>
     `${q4.cost_per_sample_s[m].toFixed(1)} s ${SHORT[m]}`).join(', '));
 
-  // Per-model denominators with each exclusion cause counted, straight from the panel block --
+  // Per-model denominators with every exclusion cause counted, straight from the panel block --
   // an engineering exclusion must never read as a scoring or biology decision.
-  const CAUSE = { dram: 'device memory', fold_artifact: 'mis-fold' };
+  const CAUSE = { fold_artifact: 'mis-fold' };
   set('lim-panel', MODELS.map(m => {
     const v = p.panel.per_model[m], why = [];
-    for (const k in v.excluded_absent) why.push(`${v.excluded_absent[k].length} ${CAUSE[k] || k}`);
-    if (v.excluded_short_rung.length) why.push(`${v.excluded_short_rung.length} short pool`
-      + (v.excluded_short_rung.length > 1 ? 's' : ''));
-    return `${LABEL[m]} ${v.analysed_targets}${why.length ? ' (' + why.join(', ') + ')' : ''}`;
+    for (const t in v.excluded_cells) why.push(`${t} ${CAUSE[v.excluded_cells[t]] || v.excluded_cells[t]}`);
+    return `${LABEL[m]} ${v.analysed_targets}${why.length ? ' (minus ' + why.join(', ') + ')' : ''}`;
   }).join(', ') + '.');
-  set('lim-cutoff', p.panel.cutoff_utc.replace('T', ' ').replace('Z', ' UTC'));
+  set('lim-cells', `${p.panel.panel_cells} folded, ${p.panel.analysed_cells} analysed`);
+  set('lim-depth', p.panel.cell_depths.join(' and '));
+
+  // Code provenance: the off-tree cell count and the largest movement any headline shows when
+  // they are dropped. Both measured, so the disclosure states a number rather than a reassurance.
+  const lo = D.robustness.leave_out;
+  let worst = 0, worstName = null;
+  MODELS.forEach(m => {
+    for (const k in (lo[m].headlines || {})) {
+      const d = Math.abs(lo[m].headlines[k].delta);
+      if (k.startsWith('delivered') || k.startsWith('gap') || k.startsWith('frac'))
+        if (d > worst) { worst = d; worstName = k; }
+    }
+  });
+  set('lim-offtree', `${p.panel.off_tree_cell_count} of the ${p.panel.panel_cells}`);
+  set('lim-leaveout', `${worst.toFixed(4)} DockQ`);
+  set('lim-leaveout-ok', lo.all_inside_ci
+    ? 'every headline stays inside its own full-panel interval'
+    : 'AT LEAST ONE HEADLINE MOVES OUTSIDE ITS INTERVAL');
+
+  // Secondary-metric depth, so no epitope or CDR claim is read at 512.
+  const g2 = D.integrity.g2_label_depth;
+  set('lim-depth-secondary', MODELS.map(m => {
+    const d = g2[m].per_target_depth;
+    return `${SHORT[m]} epitope ${Math.round(d.epitope_jaccard)}, CDR-H3 ${Math.round(d.cdr_h3_rmsd)}`;
+  }).join('; ') + ` of ${TOP}`);
+
+  // esmfold2's selector is stored on a coarse grid, so ties are common. State the distinct-value
+  // share and how far the delivered number moves when the tie is resolved the other way.
+  const ts2 = D.robustness.tie_sensitivity;
+  const tied = MODELS.reduce((a, m) =>
+    ts2[m].mean_distinct_selector_frac < ts2[a].mean_distinct_selector_frac ? m : a, MODELS[0]);
+  set('lim-ties', `${LABEL[tied]}, ${(100 * ts2[tied].mean_distinct_selector_frac).toFixed(0)}% of its `
+    + `${TOP} confidence values distinct`);
+  set('lim-ties-shift', `${ts2[tied].shift_for_minus_against >= 0 ? '+' : ''}`
+    + `${ts2[tied].shift_for_minus_against.toFixed(4)} DockQ`);
+
+  set('lim-trunc', String(D.integrity.g4_pool_semantics.boltz2.cell_row_counts.join(', ')));
+  set('lim-dup', MODELS.every(m =>
+    Object.keys(D.integrity.g5_seeds[m].cells_with_duplicate_structures).length === 0)
+    ? 'none, in any cell' : 'SOME CELLS REPEAT A STRUCTURE');
+  const w = D.integrity.wall_time;
+  set('lim-wall', `${w.total_null_wall_s} of the ${p.panel.samples_analysed.toLocaleString('en-US')}`);
 }
 
 function controls() {

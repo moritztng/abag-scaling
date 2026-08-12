@@ -9,7 +9,7 @@ range.
 
 Two correlations, deliberately separated:
 
-    within-target   Spearman(confidence, DockQ) over one target's 256 samples, then
+    within-target   Spearman(confidence, DockQ) over one target's 512 samples, then
                     summarised across targets. "Does the score know WHICH SAMPLE is right?"
     across-target   Spearman(target-mean confidence, target-mean DockQ) over targets.
                     "Does the score know WHICH TARGET is easy?"
@@ -54,30 +54,33 @@ def selector_control(model: str) -> dict:
     }
 
 
-TAIL_FRACS = [1.0, 0.25, 0.125, 0.03125]
+# Tail depths in SAMPLES, not fractions: an integer key round-trips through JSON into a
+# JavaScript object lookup, where str(1.0) == "1.0" but String(1.0) == "1" and the whole-pool
+# entry silently goes missing.
+TAIL_SIZES = [512, 128, 64, 16]
 
 
 def tail_rho(model: str) -> dict:
-    """Spearman(selector, DockQ) restricted to the top `f` of the pool by confidence.
+    """Spearman(selector, DockQ) over the top `k` of the pool by confidence.
 
-    Per target, then bootstrapped over targets. The top 3.1% of 512 is 16 samples, which is
-    the neighbourhood a real user picking from a deep pool actually chooses in.
+    Per target, then bootstrapped over targets. 16 of 512 is the neighbourhood a real user
+    picking from a deep pool actually chooses in.
     """
     pl = core.pools(model)
     targets = sorted(pl)
     out = {}
-    for f in TAIL_FRACS:
+    for k in TAIL_SIZES:
         rhos = []
         for t in targets:
             p = pl[t]
             s = p.selector.to_numpy()
             d = p.dockq.to_numpy()
-            k = max(3, int(round(len(s) * f)))
-            top = np.argsort(-s, kind="stable")[:k]
+            kk = min(len(s), max(3, k))
+            top = np.argsort(-s, kind="stable")[:kk]
             rhos.append(core.spearman(s[top], d[top]))
         rhos = np.array(rhos)
-        out[str(f)] = {
-            "n_samples": int(round(core.TOP_RUNG * f)),
+        out[str(k)] = {
+            "n_samples": k,
             "n_targets_finite": int(np.isfinite(rhos).sum()),
             "rho": core.paired_bootstrap(np.nan_to_num(rhos, nan=0.0)),
             "median": float(np.nanmedian(rhos)),
@@ -129,7 +132,7 @@ def analyse(model: str) -> dict:
     ]
     out["selector_control"] = selector_control(model)
     out["tail_rho"] = tail_rho(model)
-    out["tail_fracs"] = TAIL_FRACS
+    out["tail_sizes"] = TAIL_SIZES
     return out
 
 
@@ -158,5 +161,4 @@ if __name__ == "__main__":
             print(f"    {s['stratum']:<12} n={s['n_targets']:>3} oracle={s['oracle_dockq_mean']:.3f}"
                   f"  rho_med selector={s['within_target_rho_median']['selector']:+.3f}")
         print("    tail rho: " + "  ".join(
-            f"top{int(f * 1000) / 10:g}% (n={a['tail_rho'][str(f)]['n_samples']}) "
-            f"{core.fmt(a['tail_rho'][str(f)]['rho'], 3)}" for f in a["tail_fracs"]))
+            f"top {k} {core.fmt(a['tail_rho'][str(k)]['rho'], 3)}" for k in a["tail_sizes"]))

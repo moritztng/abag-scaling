@@ -29,6 +29,7 @@ import numpy as np
 
 import core
 import q1_selection
+import q2_confidence
 
 # Statistics the leave-out must not move outside their own full-panel interval. Each is a
 # path into q1_selection.analyse's output.
@@ -46,7 +47,8 @@ HEADLINES = [
                 "lo": a["thresholds"]["acceptable"]["user"]["lo"][-1],
                 "hi": a["thresholds"]["acceptable"]["user"]["hi"][-1]}),
 ]
-TAIL_FRACS = [1.0, 0.25, 0.125, 0.03125]
+# Sample counts, not fractions -- see q2_confidence.TAIL_SIZES for why the key is an int.
+TAIL_SIZES = q2_confidence.TAIL_SIZES
 NULL_SEED = 20260812
 
 
@@ -128,22 +130,22 @@ def tail_range_null() -> dict:
     for m in core.MODELS:
         pl = core.pools(m)
         targets = sorted(pl)
-        res = {"n_targets": len(targets), "fracs": {}}
-        for f in TAIL_FRACS:
+        res = {"n_targets": len(targets), "sizes": {}}
+        for k in TAIL_SIZES:
             tail, null = [], []
             for t in targets:
                 p = pl[t]
                 s = p.selector.to_numpy()
                 d = p.dockq.to_numpy()
-                k = max(3, int(round(len(s) * f)))
-                top = np.argsort(-s, kind="stable")[:k]
+                kk = min(len(s), max(3, k))
+                top = np.argsort(-s, kind="stable")[:kk]
                 tail.append(core.spearman(s[top], d[top]))
-                idx = rng.choice(len(s), k, replace=False)
+                idx = rng.choice(len(s), kk, replace=False)
                 null.append(core.spearman(s[idx], d[idx]))
             tail = np.array(tail)
             null = np.array(null)
-            res["fracs"][str(f)] = {
-                "n_samples": int(round(512 * f)),
+            res["sizes"][str(k)] = {
+                "n_samples": k,
                 "rho_tail": core.paired_bootstrap(np.nan_to_num(tail, nan=0.0)),
                 "rho_random_same_size": core.paired_bootstrap(np.nan_to_num(null, nan=0.0)),
                 "tail_minus_null": core.paired_bootstrap(
@@ -186,16 +188,15 @@ if __name__ == "__main__":
 
     print("\nMechanism: rho(selector, DockQ) in the top tail, against a same-size random cut")
     for m in core.MODELS:
-        print(f"  {m:<14}" + "".join(f"{'top ' + str(int(f * 100)) + '%':>16}"
-                                     for f in TAIL_FRACS))
-        a = r["tail_range_null"][m]["fracs"]
+        print(f"  {m:<14}" + "".join(f"{'top ' + str(k):>16}" for k in TAIL_SIZES))
+        a = r["tail_range_null"][m]["sizes"]
         print(f"  {'  tail':<14}" + "".join(
-            f"{a[str(f)]['rho_tail']['mean']:>+16.3f}" for f in TAIL_FRACS))
+            f"{a[str(k)]['rho_tail']['mean']:>+16.3f}" for k in TAIL_SIZES))
         print(f"  {'  random':<14}" + "".join(
-            f"{a[str(f)]['rho_random_same_size']['mean']:>+16.3f}" for f in TAIL_FRACS))
+            f"{a[str(k)]['rho_random_same_size']['mean']:>+16.3f}" for k in TAIL_SIZES))
         print(f"  {'  diff':<14}" + "".join(
-            f"{a[str(f)]['tail_minus_null']['mean']:>+16.3f}" for f in TAIL_FRACS))
-        def _ci(f):
-            d = a[str(f)]["tail_minus_null"]
+            f"{a[str(k)]['tail_minus_null']['mean']:>+16.3f}" for k in TAIL_SIZES))
+        def _ci(k):
+            d = a[str(k)]["tail_minus_null"]
             return f"[{d['lo']:+.3f},{d['hi']:+.3f}]"
-        print(f"  {'  diff CI':<14}" + "".join(f"{_ci(f):>16}" for f in TAIL_FRACS))
+        print(f"  {'  diff CI':<14}" + "".join(f"{_ci(k):>16}" for k in TAIL_SIZES))
