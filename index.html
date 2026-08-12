@@ -249,7 +249,7 @@ select {
   <p>This is the line a user lives on: the expected DockQ of the structure the model's own
   confidence ranks first, out of <i>k</i> drawn. It rises to about <i>k</i> = 32 and then goes
   flat. Going from 32 samples to 512 — sixteen times the compute — moves it by
-  <b><span id="d-delta32">–</span></b>, and <b>every model's 95% interval contains zero</b>. Over
+  <b><span id="d-delta32">–</span></b>, and <span id="d-zero32">–</span>. Over
   the same range the best structure in the pool gains
   <b><span id="d-oracle32">–</span> DockQ</b>.</p>
   <div class="card">
@@ -518,9 +518,10 @@ select {
     saturation.</li>
     <li><b>"Delivered quality declines with N for OpenDDE-abag" is withdrawn as a headline.</b> We
     registered that test in advance at k = 8 and it came back −0.0072 [−0.0148, +0.0006], crossing
-    zero. It is reported in the findings document with its interval. The interval at k = 16 does
-    exclude zero, and we are deliberately not promoting it — moving to whichever k clears the bar
-    is the exact error the pre-registration exists to prevent. What replaced it is stronger: the
+    zero. It is reported in the findings document with its interval. The intervals at k = 16 and
+    k = 32 do exclude zero, and we are deliberately not promoting them — moving to whichever k
+    clears the bar is the exact error the pre-registration exists to prevent. What replaced it is
+    stronger: the
     tail inversion above, which is measured against its own control.</li>
     <li><b>The cost-to-80% fit ran over 1..256 and now runs over 1..512</b>, and reports how much
     the answer depends on where the data stops.</li>
@@ -582,6 +583,12 @@ const el = (n, a = {}, p) => { const e = document.createElementNS(NS, n);
   for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
 const css = v => getComputedStyle(root).getPropertyValue(v).trim();
 const fmt = (x, d = 3) => x == null ? '–' : x.toFixed(d);
+// A bound of -4.7e-5 printed at four places reads "-0.0000", which is the one thing it is not:
+// it is the sign of that digit that decides whether an interval excludes zero. Widen until it shows.
+const bound = (x, d = 4) => {
+  while (d < 7 && x !== 0 && Math.abs(x) < 0.5 * Math.pow(10, -d)) d++;
+  return x.toFixed(d);
+};
 const MODELS = ['boltz2', 'opendde-abag', 'protenix-v2', 'esmfold2'];
 const LABEL = { 'boltz2': 'Boltz-2', 'opendde-abag': 'OpenDDE-abag',
                 'protenix-v2': 'Protenix-v2', 'esmfold2': 'ESMFold2' };
@@ -780,9 +787,9 @@ function drawDeliv2() {
     MODELS.map(m => [LABEL[m], ...KS.map(k => {
       const d = q[m].delivered_delta_from_k[k];
       const zero = d.lo <= 0 && 0 <= d.hi;
-      return `${d.mean >= 0 ? '+' : ''}${d.mean.toFixed(4)}`
+      return `${d.mean >= 0 ? '+' : ''}${bound(d.mean)}`
         + `<br><span style="color:var(--${zero ? 'muted' : 'ink-soft'});font-size:11px">`
-        + `[${d.lo.toFixed(4)}, ${d.hi.toFixed(4)}]${zero ? '' : ' *'}</span>`;
+        + `[${bound(d.lo)}, ${bound(d.hi)}]${zero ? '' : ' *'}</span>`;
     })]));
 }
 
@@ -1053,9 +1060,9 @@ function drawGap() {
       const i16 = ks.indexOf(16), i2 = ks.length - 1;
       const d = q[m].gap_second_difference, zero = d.lo <= 0 && 0 <= d.hi;
       return [LABEL[m], ...(wide ? [s(o[i16]), s(u[i16])] : []), s(o[i2]), s(u[i2]),
-        `${d.mean >= 0 ? '+' : ''}${d.mean.toFixed(4)}<br>`
+        `${d.mean >= 0 ? '+' : ''}${bound(d.mean)}<br>`
         + `<span style="color:var(--${zero ? 'muted' : 'ink-soft'});font-size:11px">`
-        + `[${d.lo.toFixed(4)}, ${d.hi.toFixed(4)}]${zero ? '' : ' *'}</span>`];
+        + `[${bound(d.lo)}, ${bound(d.hi)}]${zero ? '' : ' *'}</span>`];
     }));
 }
 
@@ -1499,6 +1506,21 @@ function tiles() {
   // What you actually get: the 32 -> 512 delta, and the ceiling's gain over the same range.
   const d32 = MODELS.map(m => q[m].delivered_delta_from_k['32']);
   set('d-delta32', `${rng(d32.map(v => v.mean), 3, true)} DockQ`);
+  // Not one of the four gains over that range. Three intervals contain zero and OpenDDE-abag's
+  // clears it downward by 5e-5, so "every interval contains zero" is the one summary the data
+  // does not support -- name the model and quote the bound instead of rounding it away.
+  const dz = m => q[m].delivered_delta_from_k['32'];
+  const ci = m => `${bound(dz(m).mean)} [${bound(dz(m).lo)}, ${bound(dz(m).hi)}]`;
+  const zc = MODELS.filter(m => dz(m).lo <= 0 && 0 <= dz(m).hi);
+  const up = MODELS.filter(m => dz(m).lo > 0), dn = MODELS.filter(m => dz(m).hi < 0);
+  const WORD = ['none', 'one', 'two', 'three', 'all four'];
+  document.getElementById('d-zero32').innerHTML = up.length
+    ? `<b>${WORD[up.length]} of the four 95% intervals sit above zero</b>: `
+      + up.map(m => `${LABEL[m]} at ${ci(m)}`).join(', ')
+    : `<b>not one model's 95% interval clears zero upward</b>`
+      + (zc.length === MODELS.length ? ' — every one of them contains it'
+        : `: ${WORD[zc.length]} contain it, and `
+          + dn.map(m => `${LABEL[m]}'s sits below it at ${ci(m)}`).join(', '));
   const i32 = q.boltz2.k_grid.indexOf(32), iT = q.boltz2.k_grid.length - 1;
   set('d-oracle32', rng(MODELS.map(m =>
     q[m].oracle.mean[iT] - q[m].oracle.mean[i32]), 3, true));

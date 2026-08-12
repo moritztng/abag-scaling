@@ -140,13 +140,14 @@ some k ≤ 32 in at least three of four models.
 | model | del(512)−del(8) | del(512)−del(16) | del(512)−del(32) | oracle gain 16→512 |
 |---|---|---|---|---|
 | boltz2 | +0.0098 [−0.0081, +0.0280] | +0.0065 [−0.0102, +0.0231] | +0.0046 [−0.0106, +0.0195] | +0.1110 [+0.0911, +0.1332] |
-| opendde-abag | −0.0072 [−0.0148, +0.0006] | −0.0070 [−0.0138, −0.0002] | −0.0058 [−0.0117, −0.0000] | +0.0598 [+0.0484, +0.0728] |
+| opendde-abag | −0.0072 [−0.0148, +0.0006] | −0.0070 [−0.0138, −0.0002] | −0.0058 [−0.0117, −0.00005] | +0.0598 [+0.0484, +0.0728] |
 | protenix-v2 | −0.0007 [−0.0114, +0.0097] | −0.0010 [−0.0102, +0.0082] | −0.0006 [−0.0083, +0.0076] | +0.1508 [+0.1274, +0.1759] |
 | esmfold2 | +0.0097 [+0.0025, +0.0179] | +0.0057 [+0.0004, +0.0116] | +0.0030 [−0.0009, +0.0072] | +0.1044 [+0.0884, +0.1218] |
 
-**Resolved in favour of the registered branch.** At k=8 three of four cross zero; at k=32 all four
-do. Sixteen-fold more compute past k=32 moves the delivered structure by an amount whose interval
-contains zero in every model, while the ceiling over the same range gains 0.060 to 0.151 DockQ.
+**Resolved in favour of the registered branch.** At k=8 three of four cross zero, and at k=32 the
+same three do; opendde-abag's k=32 interval clears zero on the low side by 5e-5, so it is a decline
+rather than a gain. Sixteen-fold more compute past k=32 buys no model a delivered gain whose
+interval excludes zero, while the ceiling over the same range gains 0.060 to 0.151 DockQ.
 
 **`k*` is reported and deliberately not headlined.** Defined as the smallest k reaching 99% of
 delivered(512): boltz2 448 [2, 482], opendde-abag 1 [1, 3], protenix-v2 3 [1, 410], esmfold2
@@ -162,7 +163,7 @@ downgrades from "delivered quality declines with N" to **"does not improve"**, a
 recorded here rather than on the page.
 
 The k=16 and k=32 intervals do exclude zero (−0.0070 [−0.0138, −0.0002] and −0.0058 [−0.0117,
-−0.0000]). **They are not promoted.** The registered comparison was k=8; moving to whichever k
+−0.00005]). **They are not promoted.** The registered comparison was k=8; moving to whichever k
 clears the bar is precisely the multiplicity artifact the pre-registration exists to prevent. Both
 are reported, the registered test governs.
 
