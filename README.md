@@ -7,11 +7,10 @@ generated structures in antibody-antigen co-folding: four independently trained 
 three AF3-style co-folders and one single-sequence folder — on a 161-target panel, 512 samples
 per target, every sample scored against the experimental structure.
 
-Past about 32 samples the structure the model hands you stops improving, while the best one in the
-pool keeps getting better at a steady rate to the cap. Effective N stays between 1 and 3 across a
-256-fold range of N, so the share of your draws that reaches you falls as 1/N. The reason is
-measurable: confidence ranks a whole pool about as well as its headline correlation says, and stops
-ranking, or inverts, inside its own top tail — the only region a selector ever operates in.
+Going from 32 samples to 512, 16x the compute, the structure the model hands you gains
++0.000 DockQ [-0.005, +0.005] while the best one in the pool gains +0.085 [+0.076, +0.095]. The
+reason is measurable: confidence ranks a whole pool about as well as its headline correlation says,
+and stops ranking, or inverts, inside its own top tail, the only region a selector ever operates in.
 
 **Read it: https://moritztng.github.io/abag-scaling/**
 

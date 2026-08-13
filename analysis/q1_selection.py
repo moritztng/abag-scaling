@@ -199,6 +199,35 @@ def analyse(model: str, targets: list) -> dict:
     return out
 
 
+def pooled(targets: list) -> dict:
+    """The lead figure's two curves: delivered and ceiling, averaged over the four models.
+
+    The average is taken per target and bootstrapped after that, not assembled from the four
+    published per-model intervals -- averaging four intervals is not an interval on their mean.
+    Same estimator, same shared resample draw as everything else here.
+    """
+    per = {m: _per_target(m, targets)[:2] for m in core.MODELS}
+    oracle = np.mean([per[m][0] for m in core.MODELS], axis=0)
+    user = np.mean([per[m][1] for m in core.MODELS], axis=0)
+    gap = oracle - user
+    gi = [k - 1 for k in KGRID]
+    out = {
+        "n_targets": len(targets),
+        "n_models": len(core.MODELS),
+        "k_grid": KGRID,
+        "oracle": core.ci_of(core.boot_means(oracle)[:, gi], oracle.mean(0)[gi]),
+        "user": core.ci_of(core.boot_means(user)[:, gi], user.mean(0)[gi]),
+        "gap": core.ci_of(core.boot_means(gap)[:, gi], gap.mean(0)[gi]),
+    }
+    # The within-range claim is paired, so it carries its own paired interval rather than
+    # being read off two overlapping marginal bands.
+    for k0 in (16, 32):
+        for name, a in (("delivered", user), ("ceiling", oracle)):
+            d = a[:, core.TOP_RUNG - 1] - a[:, k0 - 1]
+            out[f"{name}_delta_{k0}_to_{core.TOP_RUNG}"] = core.paired_bootstrap(d)
+    return out
+
+
 def run() -> dict:
     per_model = {m: analyse(m, sorted(core.pools(m))) for m in core.MODELS}
     common = core.common_targets(core.MODELS)
@@ -206,6 +235,7 @@ def run() -> dict:
         "per_model": per_model,
         "common_targets": common,
         "per_model_common": {m: analyse(m, common) for m in core.MODELS},
+        "pooled_common": pooled(common),
     }
 
 

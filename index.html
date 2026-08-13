@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sampling scales. Selection does not. — AbAg-XM deep-N</title>
-<meta name="description" content="329,000 DockQ-labelled antibody-antigen samples from four structure predictors, 512 per target. Past about 32 samples the structure you receive stops improving, while the best one in the pool keeps getting better. Effective N stays between 1 and 3 across a 256-fold range.">
+<meta name="description" content="329,000 DockQ-labelled antibody-antigen samples from four structure predictors, 512 per target. From 32 samples to 512, the structure you receive gains no measurable accuracy while the best one in the pool gains 0.085 DockQ.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fragment+Mono&display=swap" rel="stylesheet">
@@ -92,17 +92,9 @@ h1 {
 .lede { font-size: 18px; color: var(--ink-soft); margin: 0 0 32px; max-width: 62ch; }
 .lede b { color: var(--ink); font-weight: 600; }
 
-.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 28px 0 8px; }
-.tile {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 16px 18px;
-}
-.tile .n {
-  font-size: 26px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.15;
-  font-variant-numeric: tabular-nums; white-space: nowrap;
-}
-.tile .n small { font-size: 15px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
-.tile .l { font-size: 13px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+/* The one number that sits above the fold, in a sentence under the lead figure. */
+.leadnum { font-size: 15.5px; color: var(--ink-soft); margin: 10px 2px 2px; }
+.leadnum b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* ---------- sections ---------- */
 section { padding-top: 64px; }
@@ -193,6 +185,16 @@ select {
 .readout b { display: block; font-size: 21px; color: var(--ink); font-weight: 600;
   font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 
+/* ---------- the supporting stack ---------- */
+/* Everything below the four figures in the reading path. The summary line is the finding,
+   so the stack reads as a list of results; the chart and its table are one click away. */
+.stack { border-top: 1px solid var(--border); }
+.stack > details { margin-top: 0; border-bottom: 1px solid var(--border); }
+.stack > details > summary { font-size: 16px; font-weight: 600; color: var(--ink); padding: 12px 0; }
+.stack > details > summary:hover { color: var(--muted); }
+.stack > details > p { font-size: 15px; margin: 2px 0 14px; }
+.stack > details > :last-child { margin-bottom: 18px; }
+
 /* ---------- footer ---------- */
 .notes { margin-top: 72px; border-top: 1px solid var(--border); padding-top: 28px; }
 .notes .intro { font-size: 14.5px; color: var(--muted); margin: 0 0 6px; }
@@ -211,9 +213,6 @@ select {
   body { font-size: 15px; }
   .wrap, .bar { padding-left: 16px; padding-right: 16px; }
   .hero { padding-top: 36px; }
-  .tiles { grid-template-columns: 1fr; gap: 8px; }
-  .tile { padding: 12px 14px; }
-  .tile .n { font-size: 24px; }
   section { padding-top: 46px; }
   .card { padding: 14px 12px 8px; }
   .lede { font-size: 16.5px; }
@@ -237,14 +236,19 @@ select {
   <p class="kicker"><span id="k-samples">–</span> labelled samples · 4 models ·
   161 antibody–antigen targets</p>
   <h1>Sampling scales. Selection does not.</h1>
+  <p class="lede">Four structure predictors, 512 structures for every antibody–antigen target, each
+  one scored against the solved structure. Draw more and the best structure in the pool keeps
+  getting better. The one you are handed stops at about 32.</p>
 
   <div class="card">
     <div class="figwrap"><div id="c-lead"></div><div class="tip" id="tip-lead"></div></div>
-    <p class="foot">Mean DockQ (0 to 1 agreement with the solved structure) over the 160 targets all
-    four models folded; bars at 512 are 95% bootstrap intervals over targets.</p>
     <div class="legend" id="lg-lead"></div>
+    <p class="foot">Mean DockQ across the four models, over the 160 targets all four folded. Bands
+    are 95% bootstrap intervals over targets.</p>
+    <p class="leadnum">From 32 structures to 512, <b>16×</b> the compute: delivered
+    <b><span id="p-deliv">–</span></b>, best in the pool <b><span id="p-ceil">–</span></b>.</p>
     <details>
-      <summary>How these curves are computed</summary>
+      <summary>How these two curves are computed</summary>
       <p class="foot"><b>Best in the pool</b> is the highest-DockQ structure among the <i>k</i>
       drawn, chosen with the answer key. It is an upper bound on what any selector could return,
       not an achievable number, and it is what oracle-best-of-<i>N</i> means throughout this
@@ -253,54 +257,33 @@ select {
       <p class="foot">On the DockQ scale <b>0.23</b> is the community's <i>acceptable</i> bar, 0.49
       medium and 0.8 near-perfect.</p>
       <p class="foot">Every point is computed in closed form as an exact expectation over uniform
-      <i>k</i>-subsets, not simulated by drawing. Intervals are a 20,000-resample bootstrap over
-      targets with the resample draw shared across models.</p>
-      <p class="foot">The bars shown are marginal intervals on the level, and they are wide because
-      targets differ enormously. The within-model claim does not rest on them: delivered(512) minus
-      delivered(<i>k</i>) is a paired quantity and its interval is far tighter. That one is in the
-      table under the next figure.</p>
-      <p class="foot">This figure uses the 160 targets every model folded, so the four are ranked on
-      one denominator. The rest of the page uses each model's own 160 or 161, which moves these
-      curves by at most <span id="lead-delta">–</span>.</p>
+      <i>k</i>-subsets, not simulated by drawing. Both curves are the mean over the four models of
+      the per-target curve, bootstrapped after that averaging rather than by averaging the four
+      published intervals: 20,000 resamples over targets, the same shared draw as every other
+      interval on the page.</p>
+      <p class="foot">The bands are marginal intervals on the level, and they are wide because
+      targets differ enormously. The claim does not rest on them. Going 32 to 512 is a paired
+      quantity, and its interval is far tighter: delivered <span id="p-deliv2">–</span>, best in the
+      pool <span id="p-ceil2">–</span>.</p>
+      <p class="foot">This figure uses the 160 targets every model folded, so the four contribute at
+      every target. The rest of the page uses each model's own 160 or 161, which moves a per-model
+      curve by at most <span id="lead-delta">–</span>.</p>
     </details>
-  </div>
-
-  <p class="lede">The best structure in a pool keeps getting better all the way to 512. The one
-  handed to you stops after about 32.</p>
-
-  <div class="tiles">
-    <div class="tile"><div class="n" id="t-deliv32">–</div><div class="l">DockQ the delivered structure gains going from 32 draws to 512</div></div>
-    <div class="tile"><div class="n" id="t-orac32">–</div><div class="l">DockQ the best structure in the pool gains over the same range</div></div>
-    <div class="tile"><div class="n" id="t-fold">–</div><div class="l">the compute that buys the first number</div></div>
   </div>
 </div>
 
-<section id="deliv">
-  <h2>What you actually get stops improving.</h2>
-  <p>What confidence ranks first, out of <i>k</i> drawn, rises to about <i>k</i> = 32 and then
-  goes flat. Over 32 draws to 512, <span id="d-zero32">–</span>.</p>
+<section id="rank">
+  <h2>Which model, and does the order change?</h2>
+  <p>Delivered DockQ per model, on the same targets and the same axes. At 512 structures:
+  <b><span id="rk-order">–</span></b>. <span id="rk-stable">–</span></p>
   <div class="card">
-    <div class="figwrap"><div id="c-deliv2"></div><div class="tip" id="tip-deliv2"></div></div>
-    <div class="legend" id="lg-deliv2"></div>
-    <details><summary>Table, and how the axis is baselined</summary>
-      <p class="foot">Measured against each model's own single draw, so the axis reads as what
-      drawing more bought. Band = 95% paired bootstrap on the delivered gain. The table is
-      delivered(512) − delivered(<i>k</i>).</p><div id="tb-deliv2"></div></details>
-  </div>
-</section>
-
-<section id="law">
-  <h2>Effective N does not grow with N.</h2>
-  <p>Effective N is the draws a perfect chooser would have needed to match what the model
-  delivers from <i>N</i>. Across a 256-fold range it stays between
-  <b><span id="law-range">–</span></b>, a fitted slope of <b><span id="law-b">–</span></b> against
-  0 for flat, so the share of your draws that reaches you is
-  <b><span id="law-eff">–</span></b> at N = 512.</p>
-  <div class="card">
-    <div class="figwrap"><div id="c-law"></div><div class="tip" id="tip-law"></div></div>
-    <div class="legend" id="lg-law"></div>
-    <details><summary>Table, and the floor artifact</summary>
-      <p class="foot" id="law-foot"></p><div id="tb-law"></div></details>
+    <div class="figwrap"><div id="c-rank"></div><div class="tip" id="tip-rank"></div></div>
+    <div class="legend" id="lg-rank"></div>
+    <p class="foot">Bars at 512 are 95% bootstrap intervals over targets.</p>
+    <details><summary>Table: delivered and best in the pool at 512</summary>
+      <p class="foot">The ceilings do not rank the way the delivered curves do, so the model that
+      hands you the least is not the model with the least to give.</p>
+      <div id="tb-rank"></div></details>
   </div>
 </section>
 
@@ -308,94 +291,13 @@ select {
   <h2>Why: confidence stops ranking exactly where it is used.</h2>
   <p>Restrict the correlation between confidence and accuracy to the top tail a selector actually
   picks from and it collapses to <b><span id="w-tail">–</span></b>. For OpenDDE-abag it
-  <b>inverts</b>: inside its own top quartile, higher confidence means a worse structure. A <b>random</b> subset of the same size holds the
-  whole-pool correlation, so that correlation is carried <b>entirely by samples no selector will
-  ever pick</b>.</p>
+  <b>inverts</b>. A <b>random</b> subset of the same size holds the whole-pool correlation, so that
+  correlation is carried <b>entirely by samples no selector will ever pick</b>.</p>
   <div class="card">
     <div class="figwrap"><div id="c-tail"></div><div class="tip" id="tip-tail"></div></div>
     <div class="legend" id="lg-tail"></div>
     <details><summary>Table: tail minus same-size random control</summary>
       <p class="foot" id="tail-foot"></p><div id="tb-tail"></div></details>
-  </div>
-</section>
-
-<section id="gap">
-  <h2>The ceiling keeps rising, so the gap keeps widening.</h2>
-  <p>The ceiling gains <b><span id="g-perdbl">–</span> DockQ per doubling</b>, a rate unchanged
-  from 64→128 to 256→512, so nothing saturates inside the measured range. The gap is
-  <b><span id="gapwiden">–</span> DockQ wider at 512 samples than at 16</b>, every interval
-  excluding zero.</p>
-  <div class="card">
-    <div class="ctl">
-      <div class="seg" id="metric-seg"></div>
-    </div>
-    <div class="figwrap"><div id="c-gap"></div><div class="tip" id="tip-gap"></div></div>
-    <div class="legend" id="lg-gap"></div>
-    <details><summary>Table, and the correction on the knee</summary>
-      <p class="foot">Honest correction to our first release, which claimed no
-      knee at all: the <i>second difference</i> of the gap is negative with an interval excluding zero
-      for <span id="g-knee">–</span>, so the widening decelerates slightly there. Because the
-      ceiling's gain per doubling is flat, that deceleration is the delivered line ticking up inside
-      its own noise, not the ceiling bending.</p>
-      <div id="tb-gap"></div></details>
-  </div>
-</section>
-
-<section id="cost">
-  <h2>What it would cost to get there by sampling alone.</h2>
-  <p>Extrapolate the ceiling's trend to where 80% of targets carry an acceptable pose. Solid is
-  MEASURED to 512; past the rule everything is <b>DERIVED</b> from a log-linear fit assuming no
-  ceiling. Fitted counts: <b><span id="c-need">–</span></b>.</p>
-  <div class="card">
-    <div class="figwrap"><div id="c-cost"></div><div class="tip" id="tip-cost"></div></div>
-    <div class="legend" id="lg-cost"></div>
-    <details><summary>Table: both fit families, and the fit-range sensitivity</summary>
-      <p class="foot" id="cost-foot"></p><div id="tb-cost"></div></details>
-  </div>
-</section>
-
-<section id="conf">
-  <h2>Confidence knows which target is easy. Not which sample is right.</h2>
-  <p>The same score, correlated two ways. Across targets it works: a model knows which complexes
-  it will fold well. Within one target's 512 samples it is near zero, <span
-  class="mono">ipTM</span> included.</p>
-  <div class="card">
-    <div class="figwrap"><div id="c-conf"></div><div class="tip" id="tip-conf"></div></div>
-    <div class="legend" id="lg-conf"></div>
-    <details><summary>Table, and what each model's score is</summary>
-      <p class="foot">This run recorded only pTM and the ranking score for ESMFold2, so it has no
-      ipTM row; its ranking score is mean pLDDT. For the other three the shipped selector is
-      exactly their <span class="mono">confidence_score</span>.</p>
-      <div id="tb-conf"></div></details>
-  </div>
-</section>
-
-<section id="epi">
-  <h2>Most failures never find the epitope.</h2>
-  <p>The epitope is the patch on the antigen the antibody binds. On a target a model fails, its
-  best sample overlaps the true epitope by a median of <b><span id="epi-uns">–</span></b>, against
-  <b><span id="epi-sol">–</span></b> on one it solves. Two clean modes, almost nothing between:
-  sampling refines poses far faster than it finds sites.</p>
-  <div class="card">
-    <div class="figwrap"><div id="c-epi"></div><div class="tip" id="tip-epi"></div></div>
-    <div class="legend" id="lg-epi"></div>
-    <details><summary>Where the cut between the modes falls</summary>
-      <p class="foot" id="epi-foot"></p></details>
-  </div>
-</section>
-
-<section id="beat">
-  <h2>We tried to beat it. Nothing did.</h2>
-  <p>Six alternative selectors, fixed in advance, each built only from numbers a model already
-  returns. The bar, set before running them: beat the shipped selector with an interval excluding
-  zero on two of the four models. <b>Every one lands level with it or worse.</b></p>
-  <div class="card">
-    <div class="figwrap"><div id="c-beat"></div><div class="tip" id="tip-beat"></div></div>
-    <div class="legend" id="lg-beat"></div>
-    <details><summary>What these selectors are, and what is not tested</summary>
-      <p class="foot">Combinations average each sample's rank under the listed scores. Structural
-      consensus, ranking samples by agreement with the pool's modal pose, needs the structures
-      themselves and is not tested here.</p></details>
   </div>
 </section>
 
@@ -416,33 +318,139 @@ select {
     <div class="figwrap"><div id="c-pareto"></div><div class="tip" id="tip-pareto"></div></div>
     <div class="legend" id="lg-pareto"></div>
     <details><summary>Table</summary><div id="tb-pareto"></div></details>
-  </div>
-  <div class="card">
-    <p style="margin:0 0 4px;font-size:15px">And the catch: nobody can harvest it yet. Picking
-    the globally highest-confidence structure across all four pools <b>gets worse as the budget
-    grows</b>.</p>
-    <div class="figwrap"><div id="c-deliv"></div><div class="tip" id="tip-deliv"></div></div>
-    <div class="legend" id="lg-deliv"></div>
+    <details><summary>And the catch: nobody can harvest it yet</summary>
+      <p class="foot">Picking the globally highest-confidence structure across all four pools
+      <b>gets worse as the budget grows</b>.</p>
+      <div class="figwrap"><div id="c-deliv"></div><div class="tip" id="tip-deliv"></div></div>
+      <div class="legend" id="lg-deliv"></div>
+    </details>
   </div>
 </section>
 
-<section id="explore">
-  <h2>Look at one target.</h2>
-  <p>One real 64-sample fold. Each mark is a structure, ordered by the model's own confidence.
-  You get the leftmost.</p>
-  <div class="card">
-    <div class="pick">
-      <select id="ex-model"></select>
-      <select id="ex-target" title="targets ordered by how much the selector left on the table"></select>
-      <div class="seg" id="ex-sort"></div>
+<section id="more">
+  <h2>The rest of the panel.</h2>
+  <div class="stack">
+
+  <details><summary>What you actually get stops improving</summary>
+    <p>What confidence ranks first, out of <i>k</i> drawn, rises to about <i>k</i> = 32 and then
+    goes flat. Over 32 draws to 512, <span id="d-zero32">–</span>.</p>
+    <div class="card">
+      <div class="figwrap"><div id="c-deliv2"></div><div class="tip" id="tip-deliv2"></div></div>
+      <div class="legend" id="lg-deliv2"></div>
+      <details><summary>Table, and how the axis is baselined</summary>
+        <p class="foot">Measured against each model's own single draw, so the axis reads as what
+        drawing more bought. Band = 95% paired bootstrap on the delivered gain. The table is
+        delivered(512) − delivered(<i>k</i>).</p><div id="tb-deliv2"></div></details>
     </div>
-    <div class="figwrap"><div id="c-explore"></div><div class="tip" id="tip-explore"></div></div>
-    <div class="readout" id="ex-read"></div>
-    <details><summary>How this target was chosen</summary>
-      <p class="foot" id="ex-note"></p></details>
+  </details>
+
+  <details><summary>Effective N does not grow with N</summary>
+    <p>Effective N is the draws a perfect chooser would have needed to match what the model
+    delivers from <i>N</i>. Across a 256-fold range it stays between
+    <b><span id="law-range">–</span></b>, a fitted slope of <b><span id="law-b">–</span></b> against
+    0 for flat, so the share of your draws that reaches you is
+    <b><span id="law-eff">–</span></b> at N = 512.</p>
+    <div class="card">
+      <div class="figwrap"><div id="c-law"></div><div class="tip" id="tip-law"></div></div>
+      <div class="legend" id="lg-law"></div>
+      <details><summary>Table, and the floor artifact</summary>
+        <p class="foot" id="law-foot"></p><div id="tb-law"></div></details>
+    </div>
+  </details>
+
+  <details><summary>The ceiling keeps rising, so the gap keeps widening</summary>
+    <p>The ceiling gains <b><span id="g-perdbl">–</span> DockQ per doubling</b>, a rate unchanged
+    from 64→128 to 256→512, so nothing saturates inside the measured range. The gap is
+    <b><span id="gapwiden">–</span> DockQ wider at 512 samples than at 16</b>, every interval
+    excluding zero.</p>
+    <div class="card">
+      <div class="ctl">
+        <div class="seg" id="metric-seg"></div>
+      </div>
+      <div class="figwrap"><div id="c-gap"></div><div class="tip" id="tip-gap"></div></div>
+      <div class="legend" id="lg-gap"></div>
+      <details><summary>Table, and the correction on the knee</summary>
+        <p class="foot">Honest correction to our first release, which claimed no
+        knee at all: the <i>second difference</i> of the gap is negative with an interval excluding
+        zero for <span id="g-knee">–</span>, so the widening decelerates slightly there. Because the
+        ceiling's gain per doubling is flat, that deceleration is the delivered line ticking up
+        inside its own noise, not the ceiling bending.</p>
+        <div id="tb-gap"></div></details>
+    </div>
+  </details>
+
+  <details><summary>What it would cost to get there by sampling alone</summary>
+    <p>Extrapolate the ceiling's trend to where 80% of targets carry an acceptable pose. Solid is
+    MEASURED to 512; past the rule everything is <b>DERIVED</b> from a log-linear fit assuming no
+    ceiling. Fitted counts: <b><span id="c-need">–</span></b>.</p>
+    <div class="card">
+      <div class="figwrap"><div id="c-cost"></div><div class="tip" id="tip-cost"></div></div>
+      <div class="legend" id="lg-cost"></div>
+      <details><summary>Table: both fit families, and the fit-range sensitivity</summary>
+        <p class="foot" id="cost-foot"></p><div id="tb-cost"></div></details>
+    </div>
+  </details>
+
+  <details><summary>Confidence knows which target is easy, not which sample is right</summary>
+    <p>The same score, correlated two ways. Across targets it works: a model knows which complexes
+    it will fold well. Within one target's 512 samples it is near zero, <span
+    class="mono">ipTM</span> included.</p>
+    <div class="card">
+      <div class="figwrap"><div id="c-conf"></div><div class="tip" id="tip-conf"></div></div>
+      <div class="legend" id="lg-conf"></div>
+      <details><summary>Table, and what each model's score is</summary>
+        <p class="foot">This run recorded only pTM and the ranking score for ESMFold2, so it has no
+        ipTM row; its ranking score is mean pLDDT. For the other three the shipped selector is
+        exactly their <span class="mono">confidence_score</span>.</p>
+        <div id="tb-conf"></div></details>
+    </div>
+  </details>
+
+  <details><summary>Most failures never find the epitope</summary>
+    <p>The epitope is the patch on the antigen the antibody binds. On a target a model fails, its
+    best sample overlaps the true epitope by a median of <b><span id="epi-uns">–</span></b>, against
+    <b><span id="epi-sol">–</span></b> on one it solves. Two clean modes, almost nothing between:
+    sampling refines poses far faster than it finds sites.</p>
+    <div class="card">
+      <div class="figwrap"><div id="c-epi"></div><div class="tip" id="tip-epi"></div></div>
+      <div class="legend" id="lg-epi"></div>
+      <details><summary>Where the cut between the modes falls</summary>
+        <p class="foot" id="epi-foot"></p></details>
+    </div>
+  </details>
+
+  <details><summary>We tried to beat it. Nothing did.</summary>
+    <p>Six alternative selectors, fixed in advance, each built only from numbers a model already
+    returns. The bar, set before running them: beat the shipped selector with an interval excluding
+    zero on two of the four models. <b>Every one lands level with it or worse.</b></p>
+    <div class="card">
+      <div class="figwrap"><div id="c-beat"></div><div class="tip" id="tip-beat"></div></div>
+      <div class="legend" id="lg-beat"></div>
+      <details><summary>What these selectors are, and what is not tested</summary>
+        <p class="foot">Combinations average each sample's rank under the listed scores. Structural
+        consensus, ranking samples by agreement with the pool's modal pose, needs the structures
+        themselves and is not tested here.</p></details>
+    </div>
+  </details>
+
+  <details><summary>Look at one target</summary>
+    <p>One real 64-sample fold. Each mark is a structure, ordered by the model's own confidence.
+    You get the leftmost.</p>
+    <div class="card">
+      <div class="pick">
+        <select id="ex-model"></select>
+        <select id="ex-target" title="targets ordered by how much the selector left on the table"></select>
+        <div class="seg" id="ex-sort"></div>
+      </div>
+      <div class="figwrap"><div id="c-explore"></div><div class="tip" id="tip-explore"></div></div>
+      <div class="readout" id="ex-read"></div>
+      <details><summary>How this target was chosen</summary>
+        <p class="foot" id="ex-note"></p></details>
+    </div>
+  </details>
+
   </div>
 </section>
-
 <div class="notes">
   <p class="intro">Method, limitations, the claims we withdrew, and how to reproduce every number:</p>
   <details><summary>What this is</summary>
@@ -810,35 +818,93 @@ function logLines(hostId, tipId, { xs, series, ylab, xlab, xt, hi, lo = 0, band,
 }
 
 // ---------------------------------------------------------------- 0. the lead figure
-// Ranking, delivered scaling and ceiling scaling in one panel. Every model on the SAME 160 targets
-// (per_model_common), because a figure whose point is a ranking must not score models on different
-// target sets. Axis bounds and the acceptable bar are the only numbers typed here; the rest is read
-// from insights.json.
-const LEAD_LO = 0.20, LEAD_HI = 0.70, LEAD_ACCEPT = 0.23;
+// TWO lines. One flat, one rising, and the space between them growing: that is the whole result,
+// and it reads in a couple of seconds. Ranking is a different question, so it gets its own figure
+// below rather than eight series here. Both curves are the mean over the four models of the
+// per-target curve, bootstrapped after that averaging (analysis/pooled_lead.py) -- averaging the
+// four published intervals would not be an interval on this mean. No number is typed: the axis
+// bounds come from the bands.
 function drawLead() {
+  const q = D.q1_selection.pooled_common, ks = q.k_grid;
+  const host = document.getElementById('c-lead'), tip = document.getElementById('tip-lead');
+  const wrap = host.parentElement, tight = window.innerWidth < 620;
+  const f = frame(host, { h: tight ? 300 : 380, ml: 50, mr: tight ? 14 : 112, mt: 14, mb: 40 });
+  const lo = Math.floor(Math.min(...q.user.lo, ...q.oracle.lo) * 20) / 20;
+  const hi = Math.ceil(Math.max(...q.user.hi, ...q.oracle.hi) * 20) / 20;
+  const lx = Math.log2(ks[0]), hx = Math.log2(ks[ks.length - 1]);
+  const x = v => f.ml + (Math.log2(v) - lx) / (hx - lx) * f.iw;
+  const y = v => f.mt + f.ih - ((v - lo) / (hi - lo)) * f.ih;
+  const yts = []; for (let v = lo; v <= hi + 1e-9; v += 0.05) yts.push(+v.toFixed(2));
+  yaxis(f, y, yts, v => v.toFixed(2));
+  xticks(f, x, [1, 4, 16, 64, 256, 512]);
+  axlabel(f, 'structures drawn per target', 'x'); axlabel(f, 'mean DockQ', 'y');
+
+  const SER = [{ k: 'oracle', c: css('--oracle'), t: 'best in the pool' },
+               { k: 'user', c: css('--delivered'), t: 'delivered' }];
+  SER.forEach(s => bandfill(f, ks, q[s.k].lo, q[s.k].hi, x, y, s.c));
+  SER.forEach(s => path(f, ks, q[s.k].mean, x, y, s.c, false));
+  // Label each line at its own end. A two-line chart needs no key to decode.
+  if (!tight) declutter(SER.map(s => ({ y: y(q[s.k].mean[ks.length - 1]), c: s.c, t: s.t })), 15)
+    .forEach(e => {
+      const t = el('text', { x: f.w - f.mr + 10, y: e.y + 4, class: 'dlabel', fill: e.c }, f.svg);
+      t.style.fontSize = '11.5px';
+      t.textContent = e.t;
+    });
+  legend(document.getElementById('lg-lead'),
+    tight ? SER.slice().reverse().map(s => ({ c: s.c, t: s.t, solid: 1 })) : []);
+
+  const cross = el('line', { y1: f.mt, y2: f.mt + f.ih, stroke: css('--muted-2'),
+    'stroke-width': 1, opacity: 0 }, f.svg);
+  const hit = el('rect', { x: f.ml, y: f.mt, width: f.iw, height: f.ih, fill: 'transparent' }, f.svg);
+  const move = ev => {
+    const r = f.svg.getBoundingClientRect();
+    const px = ((ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left) * (f.w / r.width);
+    const kv = Math.pow(2, lx + Math.max(0, Math.min(1, (px - f.ml) / f.iw)) * (hx - lx));
+    let bi = 0; ks.forEach((k, i) => { if (Math.abs(k - kv) < Math.abs(ks[bi] - kv)) bi = i; });
+    cross.setAttribute('x1', x(ks[bi])); cross.setAttribute('x2', x(ks[bi]));
+    cross.setAttribute('opacity', 1);
+    tipAt(tip, wrap, x(ks[bi]), f.mt + 4, `<h4>${ks[bi]} drawn</h4>` + SER.map(s =>
+      `<div class="row"><span class="k"><i style="background:${s.c}"></i>${s.t}</span>`
+      + `<b>${q[s.k].mean[bi].toFixed(3)} `
+      + `<span style="color:var(--muted);font-weight:400">[${q[s.k].lo[bi].toFixed(3)}, `
+      + `${q[s.k].hi[bi].toFixed(3)}]</span></b></div>`).join('')
+      + `<div class="row"><span class="k">gap</span><b>${q.gap.mean[bi].toFixed(3)}</b></div>`);
+  };
+  hit.addEventListener('pointermove', move);
+  hit.addEventListener('pointerdown', move);
+  hit.addEventListener('pointerleave',
+    () => { tip.style.opacity = 0; cross.setAttribute('opacity', 0); });
+}
+
+// ---------------------------------------------------------------- 0b. the ranking
+// One question, four lines: which model hands you the best structure, and does the order move with
+// depth? Delivered only -- the ceilings are in the table, where comparing them is the point.
+function drawRank() {
   const q = D.q1_selection.per_model_common, ks = q.boltz2.k_grid;
-  const pick = k => Object.fromEntries(MODELS.map(m => [m, q[m][k]]));
-  logLines('c-lead', 'tip-lead', {
-    xs: ks, series: pick('user'), ctrl: pick('oracle'), wedge: true, ciLast: true,
-    h: [420, 320], ml: 52, mr: [78, 24], endDx: 13,
-    lo: LEAD_LO, hi: LEAD_HI, xt: [1, 4, 16, 64, 256, 512],
-    xlab: 'structures drawn per target', ylab: 'DockQ',
-    rule: { y: LEAD_ACCEPT, label: 'acceptable · DockQ ' + LEAD_ACCEPT.toFixed(2) },
+  let hi = 0, lo = 1;
+  MODELS.forEach(m => { hi = Math.max(hi, ...q[m].user.hi); lo = Math.min(lo, ...q[m].user.lo); });
+  hi = Math.ceil(hi * 20) / 20; lo = Math.floor(lo * 20) / 20;
+  logLines('c-rank', 'tip-rank', {
+    xs: ks, series: Object.fromEntries(MODELS.map(m => [m, q[m].user])), ciLast: true,
+    h: [300, 260], ml: 50, mr: [72, 18], lo, hi, xt: [1, 4, 16, 64, 256, 512],
+    xlab: 'structures drawn per target', ylab: 'DockQ delivered', yfmt: v => v.toFixed(2),
     tipfmt: bi => `<h4>${ks[bi]} drawn</h4>` + MODELS.map((m, i) => {
-      const u = q[m].user, o = q[m].oracle;
+      const u = q[m].user;
       return `<div class="row"><span class="k"><i style="background:${hue(i)}"></i>${SHORT[m]}</span>`
         + `<b>${u.mean[bi].toFixed(3)} `
         + `<span style="color:var(--muted);font-weight:400">[${u.lo[bi].toFixed(3)}, `
-        + `${u.hi[bi].toFixed(3)}] · best ${o.mean[bi].toFixed(3)}</span></b></div>`;
+        + `${u.hi[bi].toFixed(3)}]</span></b></div>`;
     }).join(''),
   });
-  legend(document.getElementById('lg-lead'), [
-    { c: css('--ink-soft'), t: 'delivered: what the model hands you', solid: 1 },
-    { c: css('--ink-soft'), t: 'best in the pool', dash: 1 },
-    // Desktop labels every line at its end, so the colour key is only needed where that is
-    // suppressed.
-    ...(window.innerWidth < 620 ? MODELS.map((m, i) => ({ c: hue(i), t: LABEL[m] })) : []),
-  ]);
+  legend(document.getElementById('lg-rank'),
+    window.innerWidth < 620 ? MODELS.map((m, i) => ({ c: hue(i), t: LABEL[m] })) : []);
+  const last = ks.length - 1, ci = s => `${s.mean[last].toFixed(3)}`
+    + `<br><span style="color:var(--muted);font-size:11px">[${s.lo[last].toFixed(3)}, `
+    + `${s.hi[last].toFixed(3)}]</span>`;
+  table(document.getElementById('tb-rank'), ['model', 'delivered', 'best in the pool', 'gap'],
+    MODELS.slice().sort((a, b) => q[b].user.mean[last] - q[a].user.mean[last]).map(m =>
+      [LABEL[m], ci(q[m].user), ci(q[m].oracle),
+       (q[m].oracle.mean[last] - q[m].user.mean[last]).toFixed(3)]));
 }
 
 // ---------------------------------------------------------------- 1. what you actually get
@@ -1554,10 +1620,22 @@ function drawExplore() {
 }
 
 // ---------------------------------------------------------------- boot
+// Most figures live inside a collapsed <details>, where the host measures zero wide and cannot be
+// drawn. So draw what is on screen, and redraw when a block opens. `toggle` does not bubble, hence
+// the capture listener.
+const FIGS = {
+  'c-lead': drawLead, 'c-rank': drawRank, 'c-tail': drawTail, 'c-pareto': drawPareto,
+  'c-deliv2': drawDeliv2, 'c-law': drawLaw, 'c-gap': drawGap, 'c-cost': drawCost,
+  'c-conf': drawConf, 'c-epi': drawEpi, 'c-beat': drawBeat, 'c-deliv': drawDelivered,
+  'c-explore': drawExplore,
+};
 function redraw() {
-  drawLead(); drawDeliv2(); drawLaw(); drawTail(); drawGap(); drawCost();
-  drawConf(); drawEpi(); drawBeat(); drawPareto(); drawDelivered(); drawExplore();
+  for (const id in FIGS) {
+    const host = document.getElementById(id);
+    if (host && host.clientWidth) FIGS[id]();
+  }
 }
+document.addEventListener('toggle', () => redraw(), true);
 
 // How much less compute the even four-way split needs to match the best single model
 // running at the largest measured budget, on the acceptable-pose rate.
@@ -1599,13 +1677,31 @@ function tiles() {
   set('k-samples', (Math.round(p.panel.samples_analysed / 1000) * 1000).toLocaleString('en-US'));
   set('gapwiden', rng(MODELS.map(m => q[m][`gap_widening_16_to_${TOP}`].mean), 2, true));
 
-  // What you actually get: the 32 -> 512 delta, and the ceiling's gain over the same range. Both
-  // hero tiles read these, so the two headline numbers cannot drift from the section that explains
-  // them, and neither can the compute multiplier they are measured over.
+  // The one number above the fold, under the lead figure: what 16x the sampling moves, on the
+  // pooled curves the figure plots, over one range for both quantities. Point estimates at three
+  // places; a BOUND is widened until its sign shows, because that sign is what decides whether an
+  // interval clears zero.
   const K0 = 32;
-  const d32 = MODELS.map(m => q[m].delivered_delta_from_k[String(K0)]);
-  const delivRange = `${rng(d32.map(v => v.mean), 3, true)} DockQ`;
-  set('d-delta32', delivRange);
+  const pc = D.q1_selection.pooled_common;
+  const sig = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(3);
+  const sgnd = v => (v < 0 ? bound(v, 3).replace('-', '−') : '+' + bound(v, 3));
+  const pci = d => `${sig(d.mean)} [${sgnd(d.lo)}, ${sgnd(d.hi)}]`;
+  set('p-deliv', pci(pc[`delivered_delta_${K0}_to_${TOP}`]));
+  set('p-ceil', pci(pc[`ceiling_delta_${K0}_to_${TOP}`]));
+  set('p-deliv2', pci(pc[`delivered_delta_${K0}_to_${TOP}`]) + ' DockQ');
+  set('p-ceil2', pci(pc[`ceiling_delta_${K0}_to_${TOP}`]) + ' DockQ');
+
+  // The ranking, and whether depth reorders it. Both read off the curves rather than asserted.
+  const last = q.boltz2.k_grid.length - 1;
+  const byDeliv = i => MODELS.slice().sort((a, b) => qc[b].user.mean[i] - qc[a].user.mean[i]);
+  const top = byDeliv(last);
+  set('rk-order', top.map(m => `${LABEL[m]} ${qc[m].user.mean[last].toFixed(2)}`).join(', '));
+  const sameOrder = qc.boltz2.k_grid.every((_, i) => byDeliv(i).join() === top.join());
+  set('rk-stable', sameOrder
+    ? `That order is the same at every depth from 1 to ${TOP}, so no amount of sampling `
+      + 'reorders these models.'
+    : 'The order changes with depth.');
+
   // Not one of the four gains over that range. Three intervals contain zero and OpenDDE-abag's
   // clears it downward by 5e-5, so "every interval contains zero" is the one summary the data
   // does not support -- name the model and quote the bound instead of rounding it away.
@@ -1618,19 +1714,9 @@ function tiles() {
     ? `<b>${WORD[up.length]} of the four 95% intervals sit above zero</b>: `
       + up.map(m => `${LABEL[m]} at ${ci(m)}`).join(', ')
     : `<b>not one model's 95% interval clears zero upward</b>`
-      + (zc.length === MODELS.length ? ' — every one of them contains it'
+      + (zc.length === MODELS.length ? ', every one of them contains it'
         : `: ${WORD[zc.length]} contain it, and `
           + dn.map(m => `${LABEL[m]}'s sits below it at ${ci(m)}`).join(', '));
-  const i32 = q.boltz2.k_grid.indexOf(K0), iT = q.boltz2.k_grid.length - 1;
-  const oracRange = rng(MODELS.map(m =>
-    q[m].oracle.mean[iT] - q[m].oracle.mean[i32]), 3, true);
-  set('d-oracle32', oracRange);
-  // Display only: a typographic minus rather than a hyphen, and a lighter connector, so a range
-  // set at display size reads as one number. The values are the ones the prose quotes.
-  const big = s => s.replace(/-/g, '−').replace(' to ', ' <small>to</small> ');
-  document.getElementById('t-deliv32').innerHTML = big(rng(d32.map(v => v.mean), 3, true));
-  document.getElementById('t-orac32').innerHTML = big(oracRange);
-  document.getElementById('t-fold').innerHTML = `${TOP / K0}<small>×</small>`;
 
   // The law.
   const law = m => q[m].effective_n_law;
