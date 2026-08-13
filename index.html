@@ -23,8 +23,6 @@
   --accent: #1a1c20;
   --grid: #ececef;
   --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
-  --oracle: #2a78d6;
-  --delivered: #1c1d21;
   --bad: #c2c4c9;
   --radius: 8px;
   --mono: "Fragment Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -38,7 +36,7 @@
     --ink: #f2f2f4; --ink-soft: #c3c5cb; --muted: #8f929a; --muted-2: #63666d;
     --accent: #f2f2f4; --grid: #24262a;
     --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
-    --oracle: #3987e5; --delivered: #f2f2f4; --bad: #43464c;
+    --bad: #43464c;
   }
 }
 :root[data-theme="dark"] {
@@ -48,7 +46,7 @@
   --ink: #f2f2f4; --ink-soft: #c3c5cb; --muted: #8f929a; --muted-2: #63666d;
   --accent: #f2f2f4; --grid: #24262a;
   --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
-  --oracle: #3987e5; --delivered: #f2f2f4; --bad: #43464c;
+  --bad: #43464c;
 }
 
 * { box-sizing: border-box; }
@@ -236,19 +234,30 @@ select {
   <p class="kicker"><span id="k-samples">–</span> labelled samples · 4 models ·
   161 antibody–antigen targets</p>
   <h1>Sampling scales. Selection does not.</h1>
-  <p class="lede">Four structure predictors, 512 structures for every antibody–antigen target, each
-  one scored against the solved structure. Draw more and the best structure in the pool keeps
-  getting better. The one you are handed stops at about 32.</p>
+  <p class="lede">Draw 512 structures for one antibody–antigen complex and the best of them keeps
+  getting better, all the way to the cap. The one the model hands you stops improving after about
+  32. Past that point every extra structure you pay for is one you will not receive.</p>
 
   <div class="card">
     <div class="figwrap"><div id="c-lead"></div><div class="tip" id="tip-lead"></div></div>
     <div class="legend" id="lg-lead"></div>
-    <p class="foot">Mean DockQ, 0 to 1 agreement with the solved structure, across the four models
-    over the 160 targets all four folded. Bands are 95% bootstrap intervals over targets.</p>
+    <p class="foot">Mean DockQ, 0 to 1 agreement with the solved structure, on the 160 targets all
+    four models folded. 95% bootstrap intervals are in the table below.</p>
     <p class="leadnum">From 32 structures to 512, <b>16×</b> the compute: delivered
     <b><span id="p-deliv">–</span></b>, best in the pool <b><span id="p-ceil">–</span></b>.</p>
     <details>
-      <summary>How these two curves are computed</summary>
+      <summary>Table: delivered and best in the pool at 512, per model</summary>
+      <p class="foot">The vertical order of the solid lines is the ranking.
+      <span id="rk-stable">–</span> The dashed lines do not rank the same way, so the model that
+      hands you the least is not the model with the least to give.</p>
+      <div id="tb-rank"></div>
+      <p class="foot">Intervals are marginal on the level, and they are wide because targets differ
+      enormously. The claim does not rest on them. Going 32 to 512 is a paired quantity and its
+      interval is far tighter: delivered <span id="p-deliv2">–</span>, best in the pool
+      <span id="p-ceil2">–</span>.</p>
+    </details>
+    <details>
+      <summary>How these curves are computed</summary>
       <p class="foot"><b>Best in the pool</b> is the highest-DockQ structure among the <i>k</i>
       drawn, chosen with the answer key. It is an upper bound on what any selector could return,
       not an achievable number, and it is what oracle-best-of-<i>N</i> means throughout this
@@ -257,35 +266,16 @@ select {
       <p class="foot">On the DockQ scale <b>0.23</b> is the community's <i>acceptable</i> bar, 0.49
       medium and 0.8 near-perfect.</p>
       <p class="foot">Every point is computed in closed form as an exact expectation over uniform
-      <i>k</i>-subsets, not simulated by drawing. Both curves are the mean over the four models of
-      the per-target curve, bootstrapped after that averaging rather than by averaging the four
-      published intervals: 20,000 resamples over targets, the same shared draw as every other
-      interval on the page.</p>
-      <p class="foot">The bands are marginal intervals on the level, and they are wide because
-      targets differ enormously. The claim does not rest on them. Going 32 to 512 is a paired
-      quantity, and its interval is far tighter: delivered <span id="p-deliv2">–</span>, best in the
-      pool <span id="p-ceil2">–</span>.</p>
+      <i>k</i>-subsets, not simulated by drawing. Intervals are 20,000 resamples over targets, the
+      same shared draw as every other interval on the page. The paired 32 to 512 numbers quoted
+      above are pooled over the four models, averaged per target before bootstrapping rather than
+      by averaging four published intervals.</p>
       <p class="foot">This figure uses the 160 targets every model folded, so the four contribute at
       every target. The rest of the page uses each model's own 160 or 161, which moves a per-model
       curve by at most <span id="lead-delta">–</span>.</p>
     </details>
   </div>
 </div>
-
-<section id="rank">
-  <h2>Which model, and does the order change?</h2>
-  <p>Delivered DockQ per model, on the same targets and the same axes. At 512 structures:
-  <b><span id="rk-order">–</span></b>. <span id="rk-stable">–</span></p>
-  <div class="card">
-    <div class="figwrap"><div id="c-rank"></div><div class="tip" id="tip-rank"></div></div>
-    <div class="legend" id="lg-rank"></div>
-    <p class="foot">Bars at 512 are 95% bootstrap intervals over targets.</p>
-    <details><summary>Table: delivered and best in the pool at 512</summary>
-      <p class="foot">The ceilings do not rank the way the delivered curves do, so the model that
-      hands you the least is not the model with the least to give.</p>
-      <div id="tb-rank"></div></details>
-  </div>
-</section>
 
 <section id="why">
   <h2>Why: confidence stops ranking exactly where it is used.</h2>
@@ -819,40 +809,46 @@ function logLines(hostId, tipId, { xs, series, ylab, xlab, xt, hi, lo = 0, band,
 }
 
 // ---------------------------------------------------------------- 0. the lead figure
-// TWO lines. One flat, one rising, and the space between them growing: that is the whole result,
-// and it reads in a couple of seconds. Ranking is a different question, so it gets its own figure
-// below rather than eight series here. Both curves are the mean over the four models of the
-// per-target curve, bootstrapped after that averaging (analysis/pooled_lead.py) -- averaging the
-// four published intervals would not be an interval on this mean. No number is typed: the axis
-// bounds come from the bands.
+// Four models, both series each. One rule for the whole figure: colour is the model, solid is what
+// you were handed, dashed is the best structure in the pool. Four dashed lines climb, four solid
+// lines flatten, and the vertical order of the solid lines is the ranking. No confidence bands --
+// eight of them overlap into mud, so the intervals go in the table under the figure and in the
+// tooltip. No number is typed: the axis bounds come from the curves.
 function drawLead() {
-  const q = D.q1_selection.pooled_common, ks = q.k_grid;
+  const q = D.q1_selection.per_model_common, ks = q.boltz2.k_grid, last = ks.length - 1;
   const host = document.getElementById('c-lead'), tip = document.getElementById('tip-lead');
   const wrap = host.parentElement, tight = window.innerWidth < 620;
-  const f = frame(host, { h: tight ? 300 : 380, ml: 50, mr: tight ? 14 : 112, mt: 14, mb: 40 });
-  const lo = Math.floor(Math.min(...q.user.lo, ...q.oracle.lo) * 20) / 20;
-  const hi = Math.ceil(Math.max(...q.user.hi, ...q.oracle.hi) * 20) / 20;
-  const lx = Math.log2(ks[0]), hx = Math.log2(ks[ks.length - 1]);
+  const f = frame(host, { h: tight ? 320 : 400, ml: 50, mr: tight ? 14 : 86, mt: 14, mb: 40 });
+  const all = MODELS.flatMap(m => [...q[m].user.mean, ...q[m].oracle.mean]);
+  const lo = Math.floor(Math.min(...all) * 20) / 20;
+  const hi = Math.ceil(Math.max(...all) * 20) / 20;
+  const lx = Math.log2(ks[0]), hx = Math.log2(ks[last]);
   const x = v => f.ml + (Math.log2(v) - lx) / (hx - lx) * f.iw;
   const y = v => f.mt + f.ih - ((v - lo) / (hi - lo)) * f.ih;
-  const yts = []; for (let v = lo; v <= hi + 1e-9; v += 0.05) yts.push(+v.toFixed(2));
-  yaxis(f, y, yts, v => v.toFixed(2));
+  // One weight of grid, every 0.1: at 0.05 the rules start competing with the lines.
+  const yts = []; for (let v = Math.ceil(lo * 10) / 10; v <= hi + 1e-9; v += 0.1) yts.push(+v.toFixed(1));
+  yaxis(f, y, yts, v => v.toFixed(1));
   xticks(f, x, [1, 4, 16, 64, 256, 512]);
   axlabel(f, 'structures drawn per target', 'x'); axlabel(f, 'mean DockQ', 'y');
 
-  const SER = [{ k: 'oracle', c: css('--oracle'), t: 'best in the pool' },
-               { k: 'user', c: css('--delivered'), t: 'delivered' }];
-  SER.forEach(s => bandfill(f, ks, q[s.k].lo, q[s.k].hi, x, y, s.c));
-  SER.forEach(s => path(f, ks, q[s.k].mean, x, y, s.c, false));
-  // Label each line at its own end. A two-line chart needs no key to decode.
-  if (!tight) declutter(SER.map(s => ({ y: y(q[s.k].mean[ks.length - 1]), c: s.c, t: s.t })), 15)
-    .forEach(e => {
-      const t = el('text', { x: f.w - f.mr + 10, y: e.y + 4, class: 'dlabel', fill: e.c }, f.svg);
+  // Ceilings underneath, delivered on top: the flattening is the half of the story that has to
+  // survive a crossing.
+  MODELS.forEach((m, i) => path(f, ks, q[m].oracle.mean, x, y, hue(i), true));
+  MODELS.forEach((m, i) => path(f, ks, q[m].user.mean, x, y, hue(i), false));
+
+  // One label per model, at the end of its solid line. Eight legend entries make the eye bounce;
+  // four labels and a two-item style key do not.
+  if (!tight) declutter(MODELS.map((m, i) =>
+    ({ y: y(q[m].user.mean[last]), c: hue(i), t: SHORT[m] })), 14).forEach(e => {
+      const t = el('text', { x: f.w - f.mr + 8, y: e.y + 4, class: 'dlabel', fill: e.c }, f.svg);
       t.style.fontSize = '11.5px';
       t.textContent = e.t;
     });
-  legend(document.getElementById('lg-lead'),
-    tight ? SER.slice().reverse().map(s => ({ c: s.c, t: s.t, solid: 1 })) : []);
+  legend(document.getElementById('lg-lead'), [
+    { c: css('--muted'), t: 'solid = delivered', solid: 1 },
+    { c: css('--muted'), t: 'dashed = best in the pool', dash: 1 },
+    ...(tight ? MODELS.map((m, i) => ({ c: hue(i), t: LABEL[m] })) : []),
+  ]);
 
   const cross = el('line', { y1: f.mt, y2: f.mt + f.ih, stroke: css('--muted-2'),
     'stroke-width': 1, opacity: 0 }, f.svg);
@@ -864,42 +860,23 @@ function drawLead() {
     let bi = 0; ks.forEach((k, i) => { if (Math.abs(k - kv) < Math.abs(ks[bi] - kv)) bi = i; });
     cross.setAttribute('x1', x(ks[bi])); cross.setAttribute('x2', x(ks[bi]));
     cross.setAttribute('opacity', 1);
-    tipAt(tip, wrap, x(ks[bi]), f.mt + 4, `<h4>${ks[bi]} drawn</h4>` + SER.map(s =>
-      `<div class="row"><span class="k"><i style="background:${s.c}"></i>${s.t}</span>`
-      + `<b>${q[s.k].mean[bi].toFixed(3)} `
-      + `<span style="color:var(--muted);font-weight:400">[${q[s.k].lo[bi].toFixed(3)}, `
-      + `${q[s.k].hi[bi].toFixed(3)}]</span></b></div>`).join('')
-      + `<div class="row"><span class="k">gap</span><b>${q.gap.mean[bi].toFixed(3)}</b></div>`);
+    tipAt(tip, wrap, x(ks[bi]), f.mt + 4, `<h4>${ks[bi]} drawn</h4>`
+      + MODELS.slice().sort((a, b) => q[b].user.mean[bi] - q[a].user.mean[bi]).map(m => {
+        const u = q[m].user, o = q[m].oracle;
+        return `<div class="row"><span class="k">`
+          + `<i style="background:${hue(MODELS.indexOf(m))}"></i>${SHORT[m]}</span>`
+          + `<b>${u.mean[bi].toFixed(3)} `
+          + `<span style="color:var(--muted);font-weight:400">[${u.lo[bi].toFixed(3)}, `
+          + `${u.hi[bi].toFixed(3)}] · best ${o.mean[bi].toFixed(3)}</span></b></div>`;
+      }).join(''));
   };
   hit.addEventListener('pointermove', move);
   hit.addEventListener('pointerdown', move);
   hit.addEventListener('pointerleave',
     () => { tip.style.opacity = 0; cross.setAttribute('opacity', 0); });
-}
 
-// ---------------------------------------------------------------- 0b. the ranking
-// One question, four lines: which model hands you the best structure, and does the order move with
-// depth? Delivered only -- the ceilings are in the table, where comparing them is the point.
-function drawRank() {
-  const q = D.q1_selection.per_model_common, ks = q.boltz2.k_grid;
-  let hi = 0, lo = 1;
-  MODELS.forEach(m => { hi = Math.max(hi, ...q[m].user.hi); lo = Math.min(lo, ...q[m].user.lo); });
-  hi = Math.ceil(hi * 20) / 20; lo = Math.floor(lo * 20) / 20;
-  logLines('c-rank', 'tip-rank', {
-    xs: ks, series: Object.fromEntries(MODELS.map(m => [m, q[m].user])), ciLast: true,
-    h: [300, 260], ml: 50, mr: [72, 18], lo, hi, xt: [1, 4, 16, 64, 256, 512],
-    xlab: 'structures drawn per target', ylab: 'DockQ delivered', yfmt: v => v.toFixed(2),
-    tipfmt: bi => `<h4>${ks[bi]} drawn</h4>` + MODELS.map((m, i) => {
-      const u = q[m].user;
-      return `<div class="row"><span class="k"><i style="background:${hue(i)}"></i>${SHORT[m]}</span>`
-        + `<b>${u.mean[bi].toFixed(3)} `
-        + `<span style="color:var(--muted);font-weight:400">[${u.lo[bi].toFixed(3)}, `
-        + `${u.hi[bi].toFixed(3)}]</span></b></div>`;
-    }).join(''),
-  });
-  legend(document.getElementById('lg-rank'),
-    window.innerWidth < 620 ? MODELS.map((m, i) => ({ c: hue(i), t: LABEL[m] })) : []);
-  const last = ks.length - 1, ci = s => `${s.mean[last].toFixed(3)}`
+  // The intervals the figure does not draw, at the depth the ranking claim is made.
+  const ci = s => `${s.mean[last].toFixed(3)}`
     + `<br><span style="color:var(--muted);font-size:11px">[${s.lo[last].toFixed(3)}, `
     + `${s.hi[last].toFixed(3)}]</span>`;
   table(document.getElementById('tb-rank'), ['model', 'delivered', 'best in the pool', 'gap'],
@@ -1625,7 +1602,7 @@ function drawExplore() {
 // drawn. So draw what is on screen, and redraw when a block opens. `toggle` does not bubble, hence
 // the capture listener.
 const FIGS = {
-  'c-lead': drawLead, 'c-rank': drawRank, 'c-tail': drawTail, 'c-pareto': drawPareto,
+  'c-lead': drawLead, 'c-tail': drawTail, 'c-pareto': drawPareto,
   'c-deliv2': drawDeliv2, 'c-law': drawLaw, 'c-gap': drawGap, 'c-cost': drawCost,
   'c-conf': drawConf, 'c-epi': drawEpi, 'c-beat': drawBeat, 'c-deliv': drawDelivered,
   'c-explore': drawExplore,
@@ -1696,7 +1673,6 @@ function tiles() {
   const last = q.boltz2.k_grid.length - 1;
   const byDeliv = i => MODELS.slice().sort((a, b) => qc[b].user.mean[i] - qc[a].user.mean[i]);
   const top = byDeliv(last);
-  set('rk-order', top.map(m => `${LABEL[m]} ${qc[m].user.mean[last].toFixed(2)}`).join(', '));
   const sameOrder = qc.boltz2.k_grid.every((_, i) => byDeliv(i).join() === top.join());
   set('rk-stable', sameOrder
     ? `That order is the same at every depth from 1 to ${TOP}, so no amount of sampling `
