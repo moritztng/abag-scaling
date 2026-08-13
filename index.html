@@ -243,8 +243,8 @@ select {
   <div class="card">
     <div class="figwrap"><div id="c-lead"></div><div class="tip" id="tip-lead"></div></div>
     <div class="legend" id="lg-lead"></div>
-    <p class="foot">Mean DockQ across the four models, over the 160 targets all four folded. Bands
-    are 95% bootstrap intervals over targets.</p>
+    <p class="foot">Mean DockQ, 0 to 1 agreement with the solved structure, across the four models
+    over the 160 targets all four folded. Bands are 95% bootstrap intervals over targets.</p>
     <p class="leadnum">From 32 structures to 512, <b>16×</b> the compute: delivered
     <b><span id="p-deliv">–</span></b>, best in the pool <b><span id="p-ceil">–</span></b>.</p>
     <details>
@@ -291,8 +291,9 @@ select {
   <h2>Why: confidence stops ranking exactly where it is used.</h2>
   <p>Restrict the correlation between confidence and accuracy to the top tail a selector actually
   picks from and it collapses to <b><span id="w-tail">–</span></b>. For OpenDDE-abag it
-  <b>inverts</b>. A <b>random</b> subset of the same size holds the whole-pool correlation, so that
-  correlation is carried <b>entirely by samples no selector will ever pick</b>.</p>
+  <b>inverts</b>: inside its own top quartile, higher confidence means a worse structure. A
+  <b>random</b> subset of the same size holds the whole-pool correlation, so that correlation is
+  carried <b>entirely by samples no selector will ever pick</b>.</p>
   <div class="card">
     <div class="figwrap"><div id="c-tail"></div><div class="tip" id="tip-tail"></div></div>
     <div class="legend" id="lg-tail"></div>
