@@ -695,7 +695,7 @@ different samples from the pool, and no available signal tells you which.
 The headline direction is **not new and must not be presented as new.** Published work on
 antibody-antigen complexes already reports both halves of it:
 
-- Zhu et al., *Evaluating deep learning based structure prediction methods on antibody-antigen
+- Fromm et al., *Evaluating deep learning based structure prediction methods on antibody-antigen
   complexes* (Bioinformatics, 2026; vol 42 issue 4, btag136) reports that every method improves
   roughly linearly with the logarithm of sample count -- AF3's best-of-N mean DockQ rising from
   below 0.3 to above 0.5 by 200 samples -- and names identifying the best model among the
