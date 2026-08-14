@@ -1,9 +1,11 @@
-# AbAg-XM deep-N: what 329,000 labelled samples say about sampling and selection
+# AbAg-XM deep-N: what 329,216 labelled samples say about sampling and selection
 
 Analysis of the AbAg-XM deep-N asset (four independently trained structure predictors --
 boltz2, opendde-abag and protenix-v2 are AF3-style all-atom diffusion co-folders, esmfold2 is a
-single-sequence folder -- on a 161-target antibody-antigen panel, **512 samples per target**,
-every sample DockQ-labelled). Source data is frozen and unmodified; this document is the
+single-sequence folder, on the 164-target [2026ARK-AB](https://arxiv.org/abs/2607.03787) antibody-antigen benchmark,
+161 of them scorable, **512 samples per target**, every sample DockQ-labelled). The target set
+is OpenDDE's, not ours. The sample-level data is public at
+[Tenstorrent/abag-xm](https://huggingface.co/datasets/Tenstorrent/abag-xm) under CC-BY-4.0. Source data is frozen and unmodified; this document is the
 technical backing for the site.
 
 **The panel is complete.** 164 targets x 4 models = **656 cells, every one of them 512 samples
@@ -16,9 +18,9 @@ carries one row per rung label it belongs to; distinct DockQ-labelled structures
 
 **The analysis denominator is 643 of 656 cells**, for two reasons and neither is missing data:
 
-* **3 unscorable targets** -- 9ly2, 9ly3, 9lz2. The DockQ scorer resolves no antibody-antigen
+* **3 unscorable targets**, 9ly2, 9ly3, 9lz2. The DockQ scorer resolves no antibody-antigen
   interface for them in any model, so 161 of 164 targets are scorable, in every model.
-* **1 excluded cell** -- opendde-abag/9sbb, a root-caused p2-era pipeline artifact (galaxy samples
+* **1 excluded cell**, opendde-abag/9sbb, a root-caused p2-era pipeline artifact (galaxy samples
   in a pTM 0.668-0.697 basin against ~0.91 on a qb1 refold of the same input; DockQ 0.023 against
   0.880 under the same fixed scorer; a prevalence scan over 41 paired targets found it the only
   such case).
@@ -72,7 +74,7 @@ half.
 **Seeds.** `seed = base + 1000*chunk`, bases 40000 boltz2, 20000 opendde-abag, 30000 protenix-v2,
 50000 esmfold2, verified against the parquets. One seed per (model, chunk); the four blocks are
 pairwise disjoint, so no two models share a draw. **The seed is a pure function of model and chunk
-and is therefore shared across all 164 targets** -- independence across targets comes from the
+and is therefore shared across all 164 targets**, independence across targets comes from the
 inputs differing, not the draws differing. The diffusion noise tensor is target-shaped, so no two
 targets receive the same noise. 512 distinct structures in every one of the 643 analysed cells.
 
@@ -92,8 +94,8 @@ one.
 That is not purely a discipline. **esmfold2's shipped selector is mean pLDDT stored on a 1e-4
 grid, so only 35.4% of its 512 values per pool are distinct** (99.1% boltz2, 94.9% protenix-v2,
 82.6% opendde-abag), and under one tied value DockQ can span 0.005 to 0.056. Since our tie-break
-is the one that makes the gap as large as the tie structure allows -- the direction that flatters
-the headline -- it is measured rather than argued. Delivered DockQ at 512 with ties resolved FOR
+is the one that makes the gap as large as the tie structure allows, the direction that flatters
+the headline, it is measured rather than argued. Delivered DockQ at 512 with ties resolved FOR
 the selector instead of against: boltz2 +0.0000, opendde-abag +0.0000, protenix-v2 +0.0002,
 esmfold2 **+0.0046**. The largest shift is a twelfth of that model's own interval half-width, so
 the tie structure carries no headline.
@@ -331,14 +333,14 @@ then one of three states.
 
 Median max-EJ over the whole pool, unsolved vs solved targets: boltz2 0.318 vs 0.826,
 opendde-abag 0.403 vs 0.867, protenix-v2 0.400 vs 0.862, esmfold2 0.264 vs 0.866. The separation
-is clean on all four -- and it needs no threshold, which the counted fraction below does.
+is clean on all four, and it needs no threshold, which the counted fraction below does.
 
 **64% to 78% of all failures are targets where no sample ever lands on the right epitope**, at
 the shared cut EJ* = 0.558 (the median of the four per-model histogram troughs). That count moves
 with the cut, so the sweep is published rather than hidden: across cuts spanning the per-model
 troughs (0.458 to 0.625) the fraction runs 53% to 81%; over the wider grid 0.30 to 0.80 it runs
-31% to 84%. The threshold-free statement above -- median best-in-pool epitope overlap 0.26-0.40
-on unsolved targets against 0.83-0.87 on solved ones -- carries the finding without the knob, and
+31% to 84%. The threshold-free statement above, median best-in-pool epitope overlap 0.26-0.40
+on unsolved targets against 0.83-0.87 on solved ones, carries the finding without the knob, and
 is what the site leads with.
 
 **Does depth buy site discovery?** Less than it buys pose quality. Over k = 1 to 256 (boltz2):
@@ -363,7 +365,7 @@ so it is a scorer-coverage gap and not informative missingness.
 **The direction of that bias, stated correctly.** Partial coverage can only under-count site
 *discovery*: a sample that did find the site but carries no EJ label is unseen, so its target is
 counted as "never finds the site". The fraction is therefore **inflated** for protenix-v2 and
-esmfold2, not conservative -- and those two carry the two highest fractions (78%, 71%), which is
+esmfold2, not conservative, and those two carry the two highest fractions (78%, 71%), which is
 exactly what the bias would produce. An earlier draft of this document called it conservative;
 that was backwards.
 
@@ -697,8 +699,8 @@ antibody-antigen complexes already reports both halves of it:
 
 - Fromm et al., *Evaluating deep learning based structure prediction methods on antibody-antigen
   complexes* (Bioinformatics, 2026; vol 42 issue 4, btag136) reports that every method improves
-  roughly linearly with the logarithm of sample count -- AF3's best-of-N mean DockQ rising from
-  below 0.3 to above 0.5 by 200 samples -- and names identifying the best model among the
+  roughly linearly with the logarithm of sample count, AF3's best-of-N mean DockQ rising from
+  below 0.3 to above 0.5 by 200 samples, and names identifying the best model among the
   generated ones as the crucial remaining bottleneck. That is Q1's direction and Q6's log-linear
   shape, already in the literature. Their benchmark is **110** targets; this panel is 161.
 - The OpenDDE technical report gives ranked-vs-oracle gaps on its own benchmarks
@@ -707,14 +709,14 @@ antibody-antigen complexes already reports both halves of it:
 - Confidence-based ranking for these complexes has its own literature (AntiConf, pDockQ2,
   ipSAE, and learned rankers such as ABAG-Rank and DeepRank-Ab).
 - Smorodina & Greiff (2026) show co-folding confidence is near-random at separating cognate
-  from non-cognate pairs -- a specificity result, adjacent to but distinct from the
+  from non-cognate pairs, a specificity result, adjacent to but distinct from the
   pose-quality question here.
 
 Against that baseline, what this asset supports that those do not:
 
 1. **Effective N as a scaling law rather than a number.** Inverting the oracle curve at the
    delivered accuracy turns "there is a gap" into "512 samples plus the model's own confidence is
-   worth 1.0 to 2.7 samples chosen perfectly" -- and, because the doubled range lets us fit it,
+   worth 1.0 to 2.7 samples chosen perfectly", and, because the doubled range lets us fit it,
    into the stronger statement that **effective N does not grow with N at all** (log-log slope
    +0.007 to +0.110), so selection efficiency falls as 1/N and reaches 0.2-0.5% at N=512. One N
    gives a number; a 256-fold range gives a law.
@@ -732,13 +734,13 @@ Against that baseline, what this asset supports that those do not:
 5. **A pre-declared null on fixing selection with what is already there.** Six candidate
    selectors, fixed in advance, none of which beats the shipped selector on any model.
 
-Points 1-5 are what needs this asset -- four independently trained generators, N to 512, 329,216
+Points 1-5 are what needs this asset, four independently trained generators, N to 512, 329,216
 DockQ-labelled samples analysed, one panel of 161 targets throughout, every cell 512 deep. The
 scale is the enabler, not the claim.
 
 **How independent are the four, really?** Three of them (boltz2, opendde-abag, protenix-v2) are
 AF3-style all-atom diffusion co-folders trained largely on the PDB; only esmfold2 is a different
-kind of model. Calling them "architecturally independent" -- as an earlier draft did -- overstates
+kind of model. Calling them "architecturally independent", as an earlier draft did, overstates
 it. The measured independence is partial and is reported as such in Q3: pairwise failure-set
 Jaccard 0.21 to 0.56, and 10 of the 117 common targets are failed by all four. That partial
 independence is exactly what Q4's compute-split result trades on.
