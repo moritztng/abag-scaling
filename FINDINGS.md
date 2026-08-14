@@ -61,7 +61,7 @@ inside that one pool rather than by comparing separately folded arms, which remo
 differing-target-set problem that forces DATASHEET section 4 to caveat its rows.
 
 **Pooling gate (G3), and it is an identity test rather than a statistical one.** Truncating each
-512-sample pool back to its first 256 samples must reproduce the published N=256 per-target
+512-sample pool back to its first 256 samples must reproduce the earlier 256-sample per-target
 statistics exactly. It does, on **635 targets, 0 mismatches**: boltz2 161/161, esmfold2 160/160,
 opendde-abag 155/155, protenix-v2 159/159. Eight analysed cells are *unchecked* rather than
 failed, having no complete 256 rung to nest against (the six cells folded at rung 512 only, plus
