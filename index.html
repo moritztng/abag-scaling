@@ -430,7 +430,7 @@ select {
 
   <h3>What this is</h3>
   <p>Four independently trained predictors, each sampled to 512 structures per target on the
-  AbAg-XM panel, every structure scored with DockQ against the experimental reference. Boltz-2,
+  2026ARK-AB benchmark, every structure scored with DockQ against the experimental reference. Boltz-2,
   OpenDDE-abag and Protenix-v2 are AF3-style all-atom diffusion co-folders; ESMFold2 is a
   single-sequence folder. <span id="n-samples">–</span> labelled samples, folded on Tenstorrent
   Wormhole Galaxy hardware.</p>
@@ -531,7 +531,7 @@ select {
   <ul>
     <li><b>Models</b>: Boltz-2, OpenDDE-abag, Protenix-v2, ESMFold2 as shipped in tt-bio at
     commit <span class="mono">6d352084c</span>, stock checkpoints, inference only.</li>
-    <li><b>Targets</b>: the AbAg-XM panel, 164 antibody–antigen complexes, 161 of them scorable,
+    <li><b>Targets</b>: the <b>2026ARK-AB</b> benchmark, 164 antibody–antigen complexes, 161 of them scorable,
     each with an experimentally solved reference.</li>
     <li><b>Depth and seeds</b>: 512 samples per target per model, run as eight 64-sample chunks.
     Base seed 40000 Boltz-2, 20000 OpenDDE-abag, 30000 Protenix-v2, 50000 ESMFold2; chunk
@@ -568,6 +568,7 @@ select {
     here was made by someone else's model, scored by someone else's metric, against structures
     someone else solved and deposited.</p>
     <ul>
+      <li><b>The target set</b> is <b>2026ARK-AB</b>, the antibody-antigen benchmark released with OpenDDE: 164 PDB targets, 404 interfaces, 159 clusters at 40% MMseqs2 entity clustering. We did not assemble it. See <a href="https://arxiv.org/abs/2607.03787">Folding, Reasoning, and Scaling with Open-source Drug Discovery Engine</a> and the target list in <a href="https://github.com/aurekaresearch/OpenDDE">aurekaresearch/OpenDDE</a> under <span class="mono">benchmarks/2026ARK_AB/</span>. <b>AbAg-XM</b> is our name for the predictions and labels we generated on top of it, not for the benchmark.</li>
       <li><b>Boltz-2</b>, <a href="https://github.com/jwohlwend/boltz">jwohlwend/boltz</a>, MIT.</li>
       <li><b>Protenix-v2</b>, <a href="https://github.com/bytedance/Protenix">bytedance/Protenix</a>,
       Apache-2.0.</li>
