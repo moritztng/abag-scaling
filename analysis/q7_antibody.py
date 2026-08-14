@@ -8,9 +8,6 @@ Two questions an antibody engineer actually asks:
 Measured as: the oracle (best-of-k) curve for cdr_h3_rmsd alongside the DockQ one, the
 within-target rank correlation between DockQ and -cdr_h3_rmsd, and the penalty you pay in
 H3 RMSD by taking the DockQ-oracle sample instead of the H3-oracle sample.
-
-CDR-H3 labels share the chunk-aligned coverage gap of the epitope labels, so protenix-v2
-and esmfold2 run at their honest reduced depth.
 """
 
 from __future__ import annotations

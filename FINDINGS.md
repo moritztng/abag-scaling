@@ -18,8 +18,10 @@ carries one row per rung label it belongs to; distinct DockQ-labelled structures
 
 **The analysis denominator is 643 of 656 cells**, for two reasons and neither is missing data:
 
-* **3 unscorable targets**, 9ly2, 9ly3, 9lz2. The DockQ scorer resolves no antibody-antigen
-  interface for them in any model, so 161 of 164 targets are scorable, in every model.
+* **3 unscorable targets**, 9ly2, 9ly3, 9lz2, all anti-phosphoepitope antibodies. Every contact
+  atom on the antigen side of their declared interface sits on a phosphoserine (71/71, 78/78 and
+  48/48), and DockQ scores only standard residues, so the interface has nothing to score. 161 of
+  164 targets are scorable, in every model.
 * **1 excluded cell**, opendde-abag/9sbb, a root-caused p2-era pipeline artifact (galaxy samples
   in a pTM 0.668-0.697 basin against ~0.91 on a qb1 refold of the same input; DockQ 0.023 against
   0.880 under the same fixed scorer; a prevalence scan over 41 paired targets found it the only
@@ -371,11 +373,9 @@ resolvable native epitope, at 490 mean samples per target in all four. All four 
 at 256, for comparability with the growth curve.
 
 Rerunning this section on the completed labels moved the fraction by **nothing**. It is 0.6875 /
-0.6667 / 0.7241 / 0.7049 both before and after, bit for bit, and not one target changes state.
-Earlier drafts of this document argued about the direction of a coverage bias, first calling it
-conservative and then inflating; the measurement settles it, because the 160 extra samples per
-target land on the same side of the cut. Unsolved targets sit at max-EJ 0.35-0.40 against a 0.558
-cut and depth does not close that. What the deeper pools did move is the two medians above and two
+0.6667 / 0.7241 / 0.7049 both before and after, and not one target changes state: the 160 extra
+samples per target land on the same side of the cut, because unsolved targets sit at max-EJ
+0.35-0.40 against a 0.558 cut. What the deeper pools did move is the two medians above and two
 cells of the sensitivity sweep.
 
 **Do the models fail on the same targets?** Partly. Pairwise Jaccard of failure sets ranges 0.21

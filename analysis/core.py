@@ -13,8 +13,12 @@ Everything downstream is built from two primitives:
     (seed 20260802, same convention as DATASHEET section 6), so CIs from different models
     and metrics are directly comparable and their differences are genuinely paired.
 
-Data source: the frozen parquets under ~/abag_xm/deepn/dataset_n512/ (override with
-ABAG_XM_DATASET). Nothing here folds, scores, or writes to the dataset.
+Data source: the parquets under ~/abag_xm/deepn/dataset_n512_repaired/ (override with
+ABAG_XM_DATASET). That tree is the frozen dataset_n512/ with the 2026-08-14 rescore applied:
+interface_lddt, the CDR RMSDs and epitope_jaccard are filled where a two-host labelling
+environment had left them empty, and no other value differs. dataset_n512/ stays on disk as
+the provenance of everything published before that date. Nothing here folds, scores, or
+writes to the dataset.
 """
 
 from __future__ import annotations
@@ -27,7 +31,8 @@ import numpy as np
 import pandas as pd
 from scipy.special import gammaln
 
-DATASET = Path(os.environ.get("ABAG_XM_DATASET", Path.home() / "abag_xm/deepn/dataset_n512"))
+DATASET = Path(os.environ.get("ABAG_XM_DATASET",
+                              Path.home() / "abag_xm/deepn/dataset_n512_repaired"))
 MODELS = ["boltz2", "opendde-abag", "protenix-v2", "esmfold2"]
 THRESHOLDS = [("acceptable", 0.23), ("medium", 0.49), ("high", 0.80)]
 BOOTSTRAP_B = 20000
@@ -46,7 +51,8 @@ NUMERIC = FLAVORS + [
 # Targets whose native antigen chain does not resolve. The epitope scorer intersected the
 # prediction against an empty native set and wrote a real 0.0, so every sample on these
 # reads as a total miss when the quantity is simply not computable. The published dataset
-# was corrected on 2026-08-14; these frozen parquets predate that, so drop the values here.
+# was corrected on 2026-08-14, but the scorer still writes 0.0 on these targets and the
+# label tree behind these parquets still carries it, so the rule stays load-bearing here.
 # The condition is per (model, target), never per sample: over every label record at every
 # rung, native_epitope_size is 0 on all computed samples of these targets in all four
 # models and on no other target.

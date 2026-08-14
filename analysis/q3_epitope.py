@@ -14,11 +14,10 @@ Then two growth curves, to test whether depth buys site DISCOVERY or only pose r
 P(at least one of k samples lands on the right site) against P(at least one of k samples
 is an acceptable pose).
 
-Label coverage: DockQ is complete for every model at N=256. EJ is complete for boltz2 and
-opendde-abag; for protenix-v2 and esmfold2 the epitope scorer ran on a subset of the
-64-sample chunks, so those two are analysed at the deepest chunk-aligned depth that still
-covers most targets, and are never quoted at N=256. Partial EJ coverage can only
-UNDER-count site discovery, so "never finds the site" is a conservative count for them.
+Label coverage: DockQ is complete for every model at N=256, and since the 2026-08-14
+rescore so is EJ, outside the seven targets with no resolvable native epitope. All four
+models are therefore analysed at the same depth, and the old under-count caveat for
+protenix-v2 and esmfold2 no longer applies.
 """
 
 from __future__ import annotations
@@ -34,9 +33,9 @@ MIN_TARGETS_FOR_CURVE = 100
 def ej_pools(model: str) -> dict:
     """Per-target sub-pools carrying an epitope label, in chunk-then-rank order.
 
-    EJ missingness is chunk-aligned (whole 64-sample chunks were or were not scored), so a
-    prefix of this ordering is always a union of complete folds, never a confidence-biased
-    slice of one.
+    EJ is now complete outside the seven no-native-epitope targets. The chunk-then-rank
+    ordering is kept regardless, so a prefix is always a union of complete folds rather
+    than a confidence-biased slice of one.
     """
     out = {}
     for t, p in core.pools(model).items():
@@ -178,11 +177,11 @@ def sensitivity(ej_star: float) -> dict:
     """EJ* is a knob, so publish what the headline does as it moves.
 
     Two sweeps. `ej_star` walks the cut across and beyond the range of the four per-model
-    histogram troughs. `depth` re-scores the two models with COMPLETE epitope labels at the
-    depths the two partial models actually have -- the control for the objection that the
-    partial models' higher fractions are a coverage artifact. Partial coverage can only
-    OVER-count "never finds the site" (an unlabelled sample that found the site is unseen),
-    so this bounds the bias rather than excusing it.
+    histogram troughs. `depth` re-scores boltz2 and opendde-abag at 64, 128 and 256, which
+    bounds how much of the fraction is depth rather than biology. It was originally the
+    control for protenix-v2 and esmfold2 having shallower epitope labels; the 2026-08-14
+    rescore removed that asymmetry and moved no model's fraction at all, so the sweep now
+    stands on its own as a depth-stability check.
     """
     return {
         "ej_star_grid": EJ_STAR_GRID,
