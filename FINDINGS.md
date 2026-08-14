@@ -615,7 +615,7 @@ different samples from the pool, and no available signal tells you which.
   it the only such case (next worst |delta| < 0.2).
 
 - **Code provenance, which is the attack we would make on this ourselves.** No cell in this panel
-  was folded by tt-bio as it stands on main today: the campaign deliberately ran one frozen engine
+  was folded by TT-Bio as it stands on main today: the campaign deliberately ran one frozen engine
   tree so every cell is comparable, and main today cannot fold the four largest targets at all.
   **Six of the 656 cells were folded on two later trees**, opendde-abag 9i3p / 9ivj / 9q7y and
   protenix-v2 9j4c on one, esmfold2 9j4c and opendde-abag 9j4c on the other, because those targets

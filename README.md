@@ -77,6 +77,6 @@ Nothing on the page is typed in by hand; it is all read from `data/insights.json
 </picture>
 
 All 335,360 folds ran on Tenstorrent hardware, a 32-chip Wormhole Galaxy, using
-**[tt-bio](https://github.com/moritztng/tt-bio)**, our open-source stack for running structure
+**[TT-Bio](https://github.com/moritztng/tt-bio)**, our open-source stack for running structure
 prediction models on Tenstorrent. At this scale cost per prediction is what decides whether a study
 like this is affordable at all.
