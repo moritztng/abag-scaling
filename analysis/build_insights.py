@@ -54,7 +54,8 @@ def provenance() -> dict:
     return {
         "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "analysis_sha": sha,
-        "dataset": str(core.DATASET),
+        # Public identity of the source data, not the local path it was read from.
+        "dataset": "https://huggingface.co/datasets/Tenstorrent/abag-xm",
         "bootstrap": {"B": core.BOOTSTRAP_B, "seed": core.BOOTSTRAP_SEED,
                       "unit": "target, shared resample draw across models and metrics"},
         "models": core.MODELS,
