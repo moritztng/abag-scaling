@@ -195,6 +195,20 @@ select {
   .lede { font-size: 16.5px; }
   input[type=range] { width: 150px; }
 }
+
+  .cite pre {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px; margin: 10px 0 0;
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.55;
+    color: var(--ink-soft); overflow-x: auto; white-space: pre;
+  }
+  .cite .plain { color: var(--ink-soft); font-size: 14.5px; margin: 0 0 4px; }
+  .cite .copy {
+    font: inherit; font-size: 12.5px; cursor: pointer; margin-top: 10px;
+    background: transparent; color: var(--muted); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 10px;
+  }
+  .cite .copy:hover { color: var(--ink); border-color: var(--muted); }
 </style>
 </head>
 <body>
@@ -532,7 +546,28 @@ select {
   <p class="mono" id="stamp" style="color:var(--muted-2)"></p>
 </div>
 
+  <div class="notes cite">
+    <h2>How to cite</h2>
+    <p class="plain">Th&uuml;ning, M. (2026). <i>AbAg-XM: 335,360 DockQ-labelled antibody-antigen
+    structure predictions from four models</i>. Tenstorrent.
+    <span class="mono">https://huggingface.co/datasets/Tenstorrent/abag-xm</span></p>
+    <pre id="bib">@misc{abagxm2026,
+  title  = {AbAg-XM: 335,360 DockQ-labelled antibody-antigen structure predictions
+            from four models},
+  author = {Th\"uning, Moritz},
+  year   = {2026},
+  url    = {https://huggingface.co/datasets/Tenstorrent/abag-xm},
+  note   = {Analysis: https://moritztng.github.io/abag-scaling/}
+}</pre>
+    <button class="copy" id="copybib" type="button">Copy BibTeX</button>
+    <p style="color:var(--muted-2);font-size:13.5px;margin-top:14px">
+    The dataset and this analysis are CC-BY-4.0. The reference structures come from the PDB under
+    CC0; if you use those, cite the original depositors too.</p>
+  </div>
+
 </div>
+
+
 
 <script>
 // ---------------------------------------------------------------- theme
@@ -1782,6 +1817,17 @@ fetch('data/insights.json').then(r => r.json()).then(j => {
   redraw();
   let t; addEventListener('resize', () => { clearTimeout(t); t = setTimeout(redraw, 120); });
 });
+
+  (function () {
+    var b = document.getElementById('copybib');
+    if (!b) return;
+    b.onclick = function () {
+      var s = document.getElementById('bib').textContent;
+      navigator.clipboard.writeText(s).then(function () {
+        var o = b.textContent; b.textContent = 'Copied'; setTimeout(function () { b.textContent = o; }, 1400);
+      });
+    };
+  })();
 </script>
 </body>
 </html>
