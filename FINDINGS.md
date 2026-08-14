@@ -321,63 +321,73 @@ i.e. `rank` is just the selector ordering, correctly excluded as an independent 
 
 The per-sample predicted-vs-native epitope overlap (`epitope_jaccard`, EJ) is bimodal. The trough
 between the modes, searched over the interior of the range and taken as the median of the four
-per-model troughs, gives EJ* = 0.558 (per-model troughs 0.458 to 0.625). Every (model, target) is
+per-model troughs, gives EJ* = 0.558 (per-model troughs 0.208 to 0.625). Every (model, target) is
 then one of three states.
 
 | model | solved | right site, wrong pose | never finds site | share of failures that never find the site |
 |---|---|---|---|---|
-| boltz2 | 93 | 21 | 46 | 69% |
-| opendde-abag | 117 | 13 | 23 | 64% |
-| protenix-v2 | 106 | 7 | 25 | 78% |
-| esmfold2 | 76 | 18 | 44 | 71% |
+| boltz2 | 93 | 20 | 44 | 69% |
+| opendde-abag | 123 | 11 | 22 | 67% |
+| protenix-v2 | 128 | 8 | 21 | 72% |
+| esmfold2 | 96 | 18 | 43 | 70% |
 
-Median max-EJ over the whole pool, unsolved vs solved targets: boltz2 0.318 vs 0.826,
-opendde-abag 0.403 vs 0.867, protenix-v2 0.400 vs 0.862, esmfold2 0.264 vs 0.866. The separation
+Median max-EJ over the whole pool, unsolved vs solved targets: boltz2 0.380 vs 0.833,
+opendde-abag 0.389 vs 0.857, protenix-v2 0.400 vs 0.899, esmfold2 0.348 vs 0.891. The separation
 is clean on all four, and it needs no threshold, which the counted fraction below does.
 
-**64% to 78% of all failures are targets where no sample ever lands on the right epitope**, at
+**67% to 72% of all failures are targets where no sample ever lands on the right epitope**, at
 the shared cut EJ* = 0.558 (the median of the four per-model histogram troughs). That count moves
-with the cut, so the sweep is published rather than hidden: across cuts spanning the per-model
-troughs (0.458 to 0.625) the fraction runs 53% to 81%; over the wider grid 0.30 to 0.80 it runs
-31% to 84%. The threshold-free statement above, median best-in-pool epitope overlap 0.26-0.40
-on unsolved targets against 0.83-0.87 on solved ones, carries the finding without the knob, and
-is what the site leads with.
+with the cut, so the sweep is published rather than hidden: across cuts of 0.458 to 0.625 the
+fraction runs 55% to 76%; over the wider grid 0.30 to 0.80 it runs 39% to 79%. The threshold-free
+statement above, median best-in-pool epitope overlap 0.35-0.40 on unsolved targets against
+0.83-0.90 on solved ones, carries the finding without the knob, and is what the site leads with.
 
 **Does depth buy site discovery?** Less than it buys pose quality. Over k = 1 to 256 (boltz2):
-P(at least one sample finds the site) 0.409 → 0.544, a 33% relative gain, while P(at least one
-acceptable pose) goes 0.301 → 0.581, a 93% relative gain. Protenix-v2 over k = 1 to 128: +30% vs
-+58%. Esmfold2 over k = 1 to 64: +16% vs +34%. Opendde-abag is the exception, +16% vs +14%, the
-antibody-specialised model gains on both at the same rate.
+P(at least one sample finds the site) 0.417 → 0.554, a 33% relative gain, while P(at least one
+acceptable pose) goes 0.292 → 0.567, a 94% relative gain. Protenix-v2 over the same range: +32% vs
++84%. Esmfold2: +27% vs +62%. Opendde-abag is the exception, +18% vs +14%, the antibody-specialised
+model gains on both at the same rate.
 
 **A sub-claim that did NOT hold.** The relative shape of the *mean* max-EJ curve and the mean
 max-DockQ curve is nearly identical for every model (boltz2, normalised gain at k=2/8/32/128:
-EJ 0.15/0.42/0.66/0.88 vs DockQ 0.15/0.44/0.66/0.88). Site discovery does not visibly plateau
+EJ 0.15/0.42/0.65/0.88 vs DockQ 0.15/0.43/0.66/0.88). Site discovery does not visibly plateau
 while pose accuracy climbs. The site-vs-pose asymmetry above is real but shows up in the
 threshold-crossing rates, not in a plateau of the mean. Reported as measured.
 
-**Coverage caveat.** EJ labels are complete for boltz2 (161/161 at N=256) and opendde-abag
-(153/156). For protenix-v2 and esmfold2 the epitope scorer ran on a subset of the 64-sample
-chunks, so those two are analysed at their deepest chunk-aligned depth covering ≥100 targets
-(128 and 64) and are never quoted at N=256. Missingness is chunk-aligned rather than per-sample,
-and DockQ means are close between labelled and unlabelled samples (protenix-v2 0.294 vs 0.300),
-so it is a scorer-coverage gap and not informative missingness.
+**Seven targets carry no epitope label at all, by construction.** 9kwy, 9ly2, 9ly3, 9lz2, 9ull,
+9ulm and 9ynx have no resolvable native antigen chain, so there is no native epitope set to compare
+a prediction against. The scorer intersected against an empty set and wrote a real 0.0, which read
+as a total miss on every sample of those targets in all four models. One cell paired a max DockQ of
+0.984 with an epitope overlap of 0.000, which is what exposed it. Those values were corrected to
+null on the published dataset on 2026-08-14 and are excluded here as not computable, which is why
+the epitope analysis runs on 156-157 targets rather than 160-161. Three of the seven (9ly2, 9ly3,
+9lz2) carry no DockQ either and were already outside this analysis. Of the 16 model-target cells
+that were affected, 15 were `solved` on DockQ and never entered the failure statistics; the one that
+did, protenix-v2 on 9kwy, was labelled `never finds site` purely on the artifact.
+
+**Coverage caveat.** Of the targets that have an epitope at all, EJ labels are complete for boltz2
+and opendde-abag (median depth 512 per target). For protenix-v2 and esmfold2 the epitope scorer ran
+on a subset of the 64-sample chunks (median depth 384 and 320), so all four are analysed at the
+deepest chunk-aligned depth covering ≥100 targets, which is 256. Missingness is chunk-aligned rather
+than per-sample, and DockQ means are close between labelled and unlabelled samples (protenix-v2
+0.294 vs 0.300), so it is a scorer-coverage gap and not informative missingness.
 
 **The direction of that bias, stated correctly.** Partial coverage can only under-count site
 *discovery*: a sample that did find the site but carries no EJ label is unseen, so its target is
 counted as "never finds the site". The fraction is therefore **inflated** for protenix-v2 and
-esmfold2, not conservative, and those two carry the two highest fractions (78%, 71%), which is
+esmfold2, not conservative, and those two carry the two highest fractions (72%, 70%), which is
 exactly what the bias would produce. An earlier draft of this document called it conservative;
 that was backwards.
 
 The control bounds it. Re-scoring the two *completely* labelled models at the partial models'
-depths, keeping DockQ at full depth so the asymmetry is reproduced exactly: boltz2 0.687 at depth
-64, 128 and 256 alike; opendde-abag 0.667 / 0.667 / 0.639. So depth moves the fraction by at most
-0.03, and protenix-v2's 0.78 is not explained by coverage.
+depths, keeping DockQ at full depth so the asymmetry is reproduced exactly: boltz2 0.688 at depth
+64, 128 and 256 alike; opendde-abag 0.727 / 0.727 / 0.697. So depth moves the fraction by at most
+0.03, and protenix-v2's 0.72 is not explained by coverage.
 
 **Do the models fail on the same targets?** Partly. Pairwise Jaccard of failure sets ranges 0.21
-(opendde-abag vs esmfold2) to 0.56 (boltz2 vs esmfold2), the two generic co-folders fail most
-alike; the antibody-specialised model fails most differently. On the 117 targets where all four
-carry EJ labels, only **10 are failed by all four models**, while the best single model fails 26.
+(opendde-abag vs esmfold2) to 0.44 (boltz2 vs esmfold2), the two generic co-folders fail most
+alike; the antibody-specialised model fails most differently. On the 156 targets where all four
+carry EJ labels, only **10 are failed by all four models**, while the best single model fails 29.
 
 ---
 
@@ -725,7 +735,7 @@ Against that baseline, what this asset supports that those do not:
    (0.03-0.15), and the within-target signal is carried **entirely outside the region a selector
    uses**: restricted to the top quartile it falls to zero or inverts, against a same-size random
    subset that holds its whole-pool value. That is a mechanism, not an aggregate deficit.
-3. **A mechanism for the failures.** 64% to 78% of all failures never place a sample on the
+3. **A mechanism for the failures.** 67% to 72% of all failures never place a sample on the
    right epitope, so most of the missing accuracy is not a ranking problem at all and no
    selector could recover it.
 4. **Diversity priced against depth at measured compute.** Card-hour-matched, four models at

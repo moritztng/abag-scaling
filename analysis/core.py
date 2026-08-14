@@ -43,6 +43,15 @@ NUMERIC = FLAVORS + [
     "cdr_h1_rmsd", "cdr_h2_rmsd", "cdr_h3_rmsd", "epitope_jaccard", "wall_s",
 ]
 
+# Targets whose native antigen chain does not resolve. The epitope scorer intersected the
+# prediction against an empty native set and wrote a real 0.0, so every sample on these
+# reads as a total miss when the quantity is simply not computable. The published dataset
+# was corrected on 2026-08-14; these frozen parquets predate that, so drop the values here.
+# The condition is per (model, target), never per sample: over every label record at every
+# rung, native_epitope_size is 0 on all computed samples of these targets in all four
+# models and on no other target.
+NO_NATIVE_EPITOPE = ["9kwy", "9ly2", "9ly3", "9lz2", "9ull", "9ulm", "9ynx"]
+
 
 # --------------------------------------------------------------------------- loading
 
@@ -54,6 +63,7 @@ def load_samples(model: str) -> pd.DataFrame:
     # code sees a uniform float NaN rather than Python None.
     for c in NUMERIC:
         df[c] = pd.to_numeric(df[c], errors="coerce")
+    df.loc[df.target.isin(NO_NATIVE_EPITOPE), "epitope_jaccard"] = np.nan
     return df
 
 
