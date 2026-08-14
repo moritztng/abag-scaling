@@ -27,8 +27,8 @@ carries one row per rung label it belongs to; distinct DockQ-labelled structures
 
 161 + 160 + 161 + 161 = 643.
 
-**One correction to the panel, found while checking it.** The completeness census counted
-`labels.json` *present*, which is not the same as labelled. opendde-abag/9j4c carried a
+**The completeness census counts populated values, not files.** Counting `labels.json` *present*
+is not the same as counting it labelled. opendde-abag/9j4c carried a
 schema-valid, full-length `labels.json` in all eight of its chunks in which every one of its 512
 samples was a scorer-error placeholder: the campaign labeller resolves its scorers relative to its
 own location, was run from a partially-populated copy of the worktree, and **records a subprocess
@@ -223,8 +223,7 @@ By threshold, at N=512:
 | protenix-v2 | +0.0330 [+0.0271, +0.0393] | +0.0322 [+0.0261, +0.0388] | +0.0265 [+0.0189, +0.0346] | **−0.0057 [−0.0104, −0.0010]** | +0.0293 to +0.0315 |
 | esmfold2 | +0.0199 [+0.0163, +0.0238] | +0.0212 [+0.0169, +0.0259] | +0.0227 [+0.0174, +0.0285] | +0.0015 [−0.0011, +0.0043] | +0.0212 to +0.0220 |
 
-The first release claimed the gap keeps widening with no knee at all. **Half of that is wrong and
-is corrected here.** The gap does keep widening: every per-doubling increment is positive with an
+The gap does keep widening: every per-doubling increment is positive with an
 interval excluding zero. But the gap's **second difference is negative with an interval excluding
 zero in boltz2 and protenix-v2**, so the widening decelerates in two of four models and "no knee"
 cannot be stated.
@@ -332,15 +331,15 @@ then one of three states.
 | esmfold2 | 96 | 18 | 43 | 70% |
 
 Median max-EJ over the whole pool, unsolved vs solved targets: boltz2 0.380 vs 0.833,
-opendde-abag 0.389 vs 0.857, protenix-v2 0.400 vs 0.899, esmfold2 0.348 vs 0.891. The separation
+opendde-abag 0.389 vs 0.857, protenix-v2 0.400 vs 0.903, esmfold2 0.353 vs 0.923. The separation
 is clean on all four, and it needs no threshold, which the counted fraction below does.
 
 **67% to 72% of all failures are targets where no sample ever lands on the right epitope**, at
 the shared cut EJ* = 0.558 (the median of the four per-model histogram troughs). That count moves
 with the cut, so the sweep is published rather than hidden: across cuts of 0.458 to 0.625 the
-fraction runs 55% to 76%; over the wider grid 0.30 to 0.80 it runs 39% to 79%. The threshold-free
+fraction runs 55% to 76%; over the wider grid 0.30 to 0.80 it runs 34% to 79%. The threshold-free
 statement above, median best-in-pool epitope overlap 0.35-0.40 on unsolved targets against
-0.83-0.90 on solved ones, carries the finding without the knob, and is what the site leads with.
+0.83-0.92 on solved ones, carries the finding without the knob, and is what the site leads with.
 
 **Does depth buy site discovery?** Less than it buys pose quality. Over k = 1 to 256 (boltz2):
 P(at least one sample finds the site) 0.417 → 0.554, a 33% relative gain, while P(at least one
@@ -365,24 +364,19 @@ the epitope analysis runs on 156-157 targets rather than 160-161. Three of the s
 that were affected, 15 were `solved` on DockQ and never entered the failure statistics; the one that
 did, protenix-v2 on 9kwy, was labelled `never finds site` purely on the artifact.
 
-**Coverage caveat.** Of the targets that have an epitope at all, EJ labels are complete for boltz2
-and opendde-abag (median depth 512 per target). For protenix-v2 and esmfold2 the epitope scorer ran
-on a subset of the 64-sample chunks (median depth 384 and 320), so all four are analysed at the
-deepest chunk-aligned depth covering ≥100 targets, which is 256. Missingness is chunk-aligned rather
-than per-sample, and DockQ means are close between labelled and unlabelled samples (protenix-v2
-0.294 vs 0.300), so it is a scorer-coverage gap and not informative missingness.
+**Coverage, and what closing the gap did to these numbers.** EJ labels used to be short for
+protenix-v2 and esmfold2, at median depth 384 and 320 against 512 for the other two. The 2026-08-14
+rescore closed that gap: EJ is now complete on every model outside the seven targets with no
+resolvable native epitope, at 490 mean samples per target in all four. All four are still analysed
+at 256, for comparability with the growth curve.
 
-**The direction of that bias, stated correctly.** Partial coverage can only under-count site
-*discovery*: a sample that did find the site but carries no EJ label is unseen, so its target is
-counted as "never finds the site". The fraction is therefore **inflated** for protenix-v2 and
-esmfold2, not conservative, and those two carry the two highest fractions (72%, 70%), which is
-exactly what the bias would produce. An earlier draft of this document called it conservative;
-that was backwards.
-
-The control bounds it. Re-scoring the two *completely* labelled models at the partial models'
-depths, keeping DockQ at full depth so the asymmetry is reproduced exactly: boltz2 0.688 at depth
-64, 128 and 256 alike; opendde-abag 0.727 / 0.727 / 0.697. So depth moves the fraction by at most
-0.03, and protenix-v2's 0.72 is not explained by coverage.
+Rerunning this section on the completed labels moved the fraction by **nothing**. It is 0.6875 /
+0.6667 / 0.7241 / 0.7049 both before and after, bit for bit, and not one target changes state.
+Earlier drafts of this document argued about the direction of a coverage bias, first calling it
+conservative and then inflating; the measurement settles it, because the 160 extra samples per
+target land on the same side of the cut. Unsolved targets sit at max-EJ 0.35-0.40 against a 0.558
+cut and depth does not close that. What the deeper pools did move is the two medians above and two
+cells of the sensitivity sweep.
 
 **Do the models fail on the same targets?** Partly. Pairwise Jaccard of failure sets ranges 0.21
 (opendde-abag vs esmfold2) to 0.44 (boltz2 vs esmfold2), the two generic co-folders fail most
@@ -580,22 +574,26 @@ no ceiling, and is labelled DERIVED wherever it appears.
 ## Q7. You cannot get interface accuracy and loop accuracy from the same sample.
 
 Deep sampling does improve CDR-H3: best-of-k H3 RMSD falls from 1.37 Å at k=1 to 0.77 Å at k=256
-on boltz2, 1.02 → 0.70 Å on opendde-abag. But within a target's pool, DockQ and H3 accuracy are
-essentially uncorrelated, median Spearman(DockQ, -H3 RMSD) is +0.061 (boltz2), +0.067
-(opendde-abag), +0.066 (protenix-v2), -0.007 (esmfold2), and fewer than 2.5% of targets exceed
-rho = 0.5 on any model.
+on boltz2, 1.01 → 0.69 Å on opendde-abag, 1.22 → 0.71 Å on protenix-v2 and 1.47 → 0.84 Å on
+esmfold2. Since the 2026-08-14 rescore all four run the full k = 1 to 256 grid on 155-156 targets;
+before it, esmfold2 stopped at k=64 on 134 targets and protenix-v2 covered 133. But within a
+target's pool, DockQ and H3 accuracy are essentially uncorrelated, median Spearman(DockQ, -H3 RMSD)
+is +0.064 (boltz2), +0.069 (opendde-abag), +0.007 (protenix-v2), +0.034 (esmfold2), and at most
+5.8% of targets exceed rho = 0.5 on any one model.
 
 Taking the DockQ-best sample instead of the H3-best sample costs, in mean H3 RMSD: boltz2 +0.45
-[+0.38, +0.53] Å, opendde-abag +0.30 [+0.20, +0.41] Å, protenix-v2 +0.38 [+0.27, +0.50] Å,
-esmfold2 +0.46 [+0.35, +0.57] Å. If you need both the interface and the loop, you need two
+[+0.38, +0.53] Å, opendde-abag +0.30 [+0.21, +0.41] Å, protenix-v2 +0.41 [+0.32, +0.52] Å,
+esmfold2 +0.48 [+0.38, +0.58] Å. If you need both the interface and the loop, you need two
 different samples from the pool, and no available signal tells you which.
 
 ---
 
 ## Limitations
 
-- **643 of 656 cells.** 9ly2 / 9ly3 / 9lz2 are 3-way Ab:Ag hetero-hexamers whose interface the
-  DockQ scorer does not resolve, so they carry no DockQ labels in any model. One further cell is
+- **643 of 656 cells.** 9ly2 / 9ly3 / 9lz2 are anti-phosphoepitope antibodies. Every contact atom
+  on the antigen side of their declared interface sits on a phosphoserine (71/71, 78/78 and 48/48),
+  and DockQ scores only standard residues, so the interface has nothing to score and they carry no
+  DockQ labels in any model. One further cell is
   excluded. The arithmetic closes exactly, and nothing is dropped for depth any more:
 
   | model | analysed | 161 scorable minus |
@@ -655,11 +653,13 @@ different samples from the pool, and no available signal tells you which.
   order-statistic weight matrix, differ only in the ordering key, and the single tiebreak that
   touches both resolves against the selector.
 
-- **Epitope and CDR labels are chunk-partial** for protenix-v2 and esmfold2, and doubling N did not
-  double them. Mean samples labelled per target, out of 512: interface-lDDT 499 / 499 / 368 / 341
-  and CDR-H3 412 / 496 / 324 / **94** (boltz2 / opendde-abag / protenix-v2 / esmfold2). Every
-  epitope and CDR claim is quoted at its own depth, never at 512; esmfold2's CDR-H3 result is a
-  claim at n ≈ 94.
+- **Epitope and CDR labels are near-complete since the 2026-08-14 rescore.** Mean samples labelled
+  per target, out of 512: interface-lDDT 499 / 499 / 499 / 499 and CDR-H3 496 / 496 / 496 / 496
+  (boltz2 / opendde-abag / protenix-v2 / esmfold2), against 499 / 499 / 368 / 341 and
+  412 / 496 / 324 / 94 before it. Epitope Jaccard sits at 490 in all four, short of 512 only
+  because the seven targets with no resolvable native epitope are null rather than zero. Every
+  epitope and CDR claim is still quoted at its own depth, never at 512, and the nulls that remain
+  are named targets where the quantity does not exist rather than misses.
 
 - **esmfold2's selector is quantised** to a 1e-4 grid, so only 35.4% of its 512 values per pool are
   distinct (see Method). Resolving ties the other way moves its delivered DockQ by +0.0046.
