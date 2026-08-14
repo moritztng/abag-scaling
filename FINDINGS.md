@@ -36,7 +36,7 @@ The census now counts populated values: across all 656 cells, **zero partial cel
 cells, zero placeholders, zero repeated structures**.
 
 **There is no data cut-off any more.** Every chunk the first release excluded as post-cut-off, as
-a device-memory failure, or as a short pool is folded, scored and included.
+a tensor-lifetime failure in our own implementation, or as a short pool is folded, scored and included.
 
 Reproduce every number:
 
@@ -80,7 +80,7 @@ targets receive the same noise. 512 distinct structures in every one of the 643 
 the probability that sorted position j is the top-ranked member of a uniformly drawn k-subset is
 `C(j, k-1) / C(n, k)`. Applying that one weight matrix to different value columns gives the
 oracle best-of-k curve, the confidence selector's expected pick, threshold-crossing probability,
-maximum epitope overlap, and any candidate selector — all exact, at every k from 1 to 512. The
+maximum epitope overlap, and any candidate selector, all exact, at every k from 1 to 512. The
 engine is verified against brute-force enumeration over all k-subsets. It reproduces the
 campaign's own B=200 Monte-Carlo curves (DATASHEET section 7) to ~1e-3, so it supersedes them
 without contradicting them.
@@ -113,7 +113,7 @@ under the wrong rung label (boltz2/9ua5 c2, opendde-abag/9rye c2+c3 and 9xqn c2)
 takes a per-target median, so three targets' cost basis rests on seven of their eight chunks.
 
 > **Do not cost from the `wall_s` column in the packaged sample parquets.** It is byte-identical
-> across all four models for the same (target, chunk) — 631 of 631 shared chunks — and takes only
+> across all four models for the same (target, chunk), 631 of 631 shared chunks, and takes only
 > ~90 distinct minute-quantised values. It is a packaging artifact, not a per-model fold time.
 > This is a defect in the packaged asset, found here; the fleet log is unaffected.
 
@@ -123,7 +123,7 @@ takes a per-target median, so three targets' cost basis rests on seven of their 
 
 `oracle(k)` = expected best DockQ among k samples. `user(k)` = expected DockQ of the sample the
 model's own selector returns from those k. At k=1 the two coincide, and both equal the per-target
-mean DockQ — the value of drawing one sample at random.
+mean DockQ, the value of drawing one sample at random.
 
 | model | targets | random | oracle@16 | oracle@512 | delivered@16 | delivered@512 | gap@512 |
 |---|---|---|---|---|---|---|---|
@@ -300,7 +300,7 @@ and **-0.021** on opendde-abag. It does not rank samples within a target.
 
 Protenix-v2 is the strongest within-target ranker of the four (+0.185), which corroborates the
 earlier N=12 to N=23 pilot finding that protenix-v2's confidence is the best Ab-Ag trust signal
-available — now at ~700x the sample scale. It is still an order of magnitude short of usable.
+available, now at ~700x the sample scale. It is still an order of magnitude short of usable.
 
 **Is the failure concentrated on hard targets?** No. Median within-target rho by target-difficulty
 quartile (selector flavour), hardest to easiest: boltz2 +0.045 / -0.026 / +0.028 / +0.043;
@@ -311,7 +311,7 @@ targets, but never well enough on the hard ones, which are the ones that matter.
 **Control.** The "user" pick is genuinely the model's own shipped selector: the `selector` column
 equals `confidence_score` for 100% of targets on all three co-folders, and for esmfold2 holds
 plddt (which the parquet stores nowhere else). Spearman(selector, file `rank`) = -0.87 to -0.99,
-i.e. `rank` is just the selector ordering — correctly excluded as an independent signal.
+i.e. `rank` is just the selector ordering, correctly excluded as an independent signal.
 
 ---
 
@@ -344,7 +344,7 @@ is what the site leads with.
 **Does depth buy site discovery?** Less than it buys pose quality. Over k = 1 to 256 (boltz2):
 P(at least one sample finds the site) 0.409 → 0.544, a 33% relative gain, while P(at least one
 acceptable pose) goes 0.301 → 0.581, a 93% relative gain. Protenix-v2 over k = 1 to 128: +30% vs
-+58%. Esmfold2 over k = 1 to 64: +16% vs +34%. Opendde-abag is the exception, +16% vs +14% — the
++58%. Esmfold2 over k = 1 to 64: +16% vs +34%. Opendde-abag is the exception, +16% vs +14%, the
 antibody-specialised model gains on both at the same rate.
 
 **A sub-claim that did NOT hold.** The relative shape of the *mean* max-EJ curve and the mean
@@ -373,7 +373,7 @@ depths, keeping DockQ at full depth so the asymmetry is reproduced exactly: bolt
 0.03, and protenix-v2's 0.78 is not explained by coverage.
 
 **Do the models fail on the same targets?** Partly. Pairwise Jaccard of failure sets ranges 0.21
-(opendde-abag vs esmfold2) to 0.56 (boltz2 vs esmfold2) — the two generic co-folders fail most
+(opendde-abag vs esmfold2) to 0.56 (boltz2 vs esmfold2), the two generic co-folders fail most
 alike; the antibody-specialised model fails most differently. On the 117 targets where all four
 carry EJ labels, only **10 are failed by all four models**, while the best single model fails 26.
 
@@ -410,7 +410,7 @@ Fraction of targets reaching DockQ ≥ 0.23:
 From 0.08 card-h/target upward the even four-way split beats every single-model strategy at every
 budget, on both metrics. The headline comparison:
 
-**Four models at 0.08 card-h/target — 11.9 samples in total, about 3 per model — reach DockQ ≥
+**Four models at 0.08 card-h/target, 11.9 samples in total, about 3 per model, reach DockQ ≥
 0.23 on 0.783 [0.719, 0.843] of targets. The best single model at 2.5 card-h/target, 31x the
 compute and 233.8 samples, reaches 0.760 [0.692, 0.826].** Oracle mean DockQ over the same
 comparison: 0.598 [0.549, 0.647] vs 0.610 [0.559, 0.662].
@@ -421,13 +421,13 @@ this budget:
 
 | union@0.08 − best-single@2.5 | paired difference |
 |---|---|
-| solve rate (DockQ ≥ 0.23) | +0.0233 [-0.0292, +0.0769] — crosses zero |
-| oracle mean DockQ | -0.0123 [-0.0430, +0.0206] — crosses zero |
+| solve rate (DockQ ≥ 0.23) | +0.0233 [-0.0292, +0.0769], crosses zero |
+| oracle mean DockQ | -0.0123 [-0.0430, +0.0206], crosses zero |
 
 At 1/31 the compute the four-way split **draws level** with the deep single model; it does not
 beat it. An earlier draft said "beat them on solve rate", which the paired interval does not
 license. The split does overtake the deep single model, on both metrics with intervals excluding
-zero, from **0.3 card-h/target** — 1/8 the compute:
+zero, from **0.3 card-h/target**: 1/8 the compute:
 
 | union@0.3 − best-single@2.5 | paired difference |
 |---|---|
@@ -436,7 +436,7 @@ zero, from **0.3 card-h/target** — 1/8 the compute:
 
 **The equal-budget comparison is the strong one, and it is unambiguous.** At the same 0.08
 card-h/target, the four-way split beats every single model on both metrics, every interval
-excluding zero — including against the antibody specialist:
+excluding zero, including against the antibody specialist:
 
 | union@0.08 − single@0.08 | solve rate | oracle mean DockQ |
 |---|---|---|
@@ -461,7 +461,7 @@ compute. Architecture and training domain dominate sample count.
 **And the catch, reported in full.** Nobody can currently harvest the union's ceiling. Taking the
 globally highest-confidence sample across the four pools (exact computation; confidence is not
 calibrated across models, which is the point) delivers 0.450 at 0.08 card-h/target, then
-**declines to 0.406 as the budget grows to 2.5** — worse than simply using opendde-abag alone
+**declines to 0.406 as the budget grows to 2.5**, worse than simply using opendde-abag alone
 (0.500 to 0.509, flat). The union has by far the highest ceiling and the worst naive delivery.
 This is consistent with the earlier pre-declared cross-model consensus-confidence pilot, which
 was also a null result.
@@ -513,7 +513,7 @@ zero.
 
 Read with Q1 this sharpens the finding rather than softening it. The shipped selector is
 already the best of what these models expose, and it is still worth about two samples out of
-256. The problem is not that a better formula over the existing scores was overlooked — none of
+256. The problem is not that a better formula over the existing scores was overlooked, none of
 these scores carries enough within-target information to combine.
 
 **Arm not run.** Ranking samples by structural agreement with the pool's modal pose needs the
@@ -536,7 +536,7 @@ admits a non-degenerate saturating fit (a = 0.867, alpha = 0.062). So the first 
 better-supported one: **within a measured range now twice as long, the threshold-fraction curves
 still admit no saturating fit.**
 
-Because that range doubled, the fit reports **its own sensitivity to where the data stops** — the
+Because that range doubled, the fit reports **its own sensitivity to where the data stops**, the
 same families fitted on 1..256 and on 1..512:
 
 | model | bar | measured @512 | N for 80% (fit 1..512) | card-h/target | same, fit 1..256 | ratio |
@@ -555,7 +555,7 @@ protenix-v2 reaches 80% at ≥0.23 *inside* the measured range (81.4% at 512), s
 measured crossing rather than an extrapolation; opendde-abag at 79.4% is a whisker short of it.
 
 **The medium band does not survive it.** esmfold2 moves by a factor of 5.8 between the two fit
-ranges, so **no single N is quoted for esmfold2 at ≥0.49** — the page prints "unstable" in that
+ranges, so **no single N is quoted for esmfold2 at ≥0.49**, the page prints "unstable" in that
 cell instead of a number. That is the honest answer to "you extrapolated 10^14 samples from a curve
 that stops at 256": the pre-declared rule is that where the two fit ranges disagree by more than
 about 2x, no number is printed.
@@ -569,7 +569,7 @@ no ceiling, and is labelled DERIVED wherever it appears.
 
 Deep sampling does improve CDR-H3: best-of-k H3 RMSD falls from 1.37 Å at k=1 to 0.77 Å at k=256
 on boltz2, 1.02 → 0.70 Å on opendde-abag. But within a target's pool, DockQ and H3 accuracy are
-essentially uncorrelated — median Spearman(DockQ, -H3 RMSD) is +0.061 (boltz2), +0.067
+essentially uncorrelated, median Spearman(DockQ, -H3 RMSD) is +0.061 (boltz2), +0.067
 (opendde-abag), +0.066 (protenix-v2), -0.007 (esmfold2), and fewer than 2.5% of targets exceed
 rho = 0.5 on any model.
 
@@ -588,12 +588,12 @@ different samples from the pool, and no available signal tells you which.
 
   | model | analysed | 161 scorable minus |
   |---|---|---|
-  | boltz2 | 161 | — |
+  | boltz2 | 161 |, |
   | opendde-abag | 160 | 1 mis-fold (9sbb) |
-  | protenix-v2 | 161 | — |
-  | esmfold2 | 161 | — |
+  | protenix-v2 | 161 |, |
+  | esmfold2 | 161 |, |
 
-  The four device-memory exclusions (9i3p, 9ivj, 9j4c, 9q7y) and the five short pools (9ua5, 9rye,
+  The four large-target exclusions (9i3p, 9ivj, 9j4c, 9q7y), which did not fit until we fixed how long our implementation held intermediate tensors alive, and the five short pools (9ua5, 9rye,
   9gvn, 9xqn, 9d73) that the first release carried are **gone**: every one of them folds and scores.
 
 - **One exclusion remains, opendde-abag/9sbb**, as a p2-era pipeline mis-fold: the Galaxy samples
@@ -605,8 +605,8 @@ different samples from the pool, and no available signal tells you which.
 - **Code provenance, which is the attack we would make on this ourselves.** No cell in this panel
   was folded by tt-bio as it stands on main today: the campaign deliberately ran one frozen engine
   tree so every cell is comparable, and main today cannot fold the four largest targets at all.
-  **Six of the 656 cells were folded on two later trees** — opendde-abag 9i3p / 9ivj / 9q7y and
-  protenix-v2 9j4c on one, esmfold2 9j4c and opendde-abag 9j4c on the other — because those targets
+  **Six of the 656 cells were folded on two later trees**, opendde-abag 9i3p / 9ivj / 9q7y and
+  protenix-v2 9j4c on one, esmfold2 9j4c and opendde-abag 9j4c on the other, because those targets
   needed memory fixes that were not in the frozen tree. Each cell is single-engine: all eight of its
   chunks came from one tree, so no *pool* is internally inhomogeneous.
 
@@ -626,7 +626,7 @@ different samples from the pool, and no available signal tells you which.
   | opendde-abag | 160 → 156 | +0.0054 (delivered@512) | yes |
   | protenix-v2 | 161 → 160 | +0.0197 (effective N) | yes |
   | esmfold2 | 161 → 160 | −0.0592 (effective N) | yes |
-  | boltz2 | no off-tree cells | — | — |
+  | boltz2 | no off-tree cells |, |, |
 
   All 8 headlines x 3 affected models sit inside their own full-panel intervals. The largest
   movement in any DockQ-valued headline is 0.0054 against an interval half-width of 0.054, a tenth
@@ -682,11 +682,11 @@ different samples from the pool, and no available signal tells you which.
   (H4).
 
 - **Not a published-ranker benchmark**, for two different reasons that an earlier draft merged
-  into one. The **PAE-derived** scores — pDockQ2, ipSAE, and AntiConf, which is built on pTM plus
-  pDockQ2 and so inherits the requirement — genuinely cannot be computed from this asset: PAE was
+  into one. The **PAE-derived** scores, pDockQ2, ipSAE, and AntiConf, which is built on pTM plus
+  pDockQ2 and so inherits the requirement, genuinely cannot be computed from this asset: PAE was
   not written (every `labels.json` carries `pae_metrics: {"_skipped": "pae=False ptm=True"}`).
-  The **learned rankers** — DeepRank-Ab, a geometric-deep-learning scoring function over the 3D
-  structures, and ABAG-Rank, a learning-to-rank model — need no PAE and could have been run
+  The **learned rankers**: DeepRank-Ab, a geometric-deep-learning scoring function over the 3D
+  structures, and ABAG-Rank, a learning-to-rank model, need no PAE and could have been run
   against these pools. They were not. Saying they "need PAE" is wrong. Whether a learned ranker
   closes the gap is untested here.
 

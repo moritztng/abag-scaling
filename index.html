@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sampling scales. Selection does not. — AbAg-XM deep-N</title>
+<title>Sampling scales. Selection does not. · AbAg-XM deep-N</title>
 <meta name="description" content="329,000 DockQ-labelled antibody-antigen samples from four structure predictors, 512 per target. From 32 samples to 512, the structure you receive gains no measurable accuracy while the best one in the pool gains 0.085 DockQ.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -209,6 +209,14 @@ select {
     border-radius: 6px; padding: 5px 10px;
   }
   .cite .copy:hover { color: var(--ink); border-color: var(--muted); }
+
+  .datalink {
+    margin: 18px 0 0; padding: 12px 16px; font-size: 14.5px; line-height: 1.5;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); color: var(--ink-soft);
+  }
+  .datalink b { color: var(--ink); }
+  .datalink a { font-weight: 600; }
 </style>
 </head>
 <body>
@@ -230,6 +238,11 @@ select {
   <p class="lede">Draw 512 structures for one antibody–antigen complex and the best of them keeps
   getting better, all the way to the cap. The one the model hands you stops improving after about
   32. Past that point every extra structure you pay for is one you will not receive.</p>
+
+  <p class="datalink"><b>The whole dataset is public.</b> All 335,360 predicted structures, every
+  DockQ label, the confidence values, the reference structures and the alignments are on
+  <a href="https://huggingface.co/datasets/Tenstorrent/abag-xm">Hugging Face</a> under CC-BY-4.0.
+  Nothing on this page is derived from data we are holding back.</p>
 
   <div class="card">
     <div class="figwrap"><div id="c-lead"></div><div class="tip" id="tip-lead"></div></div>
@@ -471,7 +484,7 @@ select {
     <li><b>Epitope and CDR claims are quoted at their own depth, never at 512.</b> Those labels are
     partial, badly so for ESMFold2's CDR-H3. Mean samples labelled per target:
     <span id="lim-depth-secondary">–</span>. Doubling the sample count did not double these.</li>
-    <li><b>One selector is stored on a coarse grid</b> — <span id="lim-ties">–</span> — so ties are
+    <li><b>One selector is stored on a coarse grid</b>: <span id="lim-ties">–</span>, so ties are
     common, and our tie-break credits the selector with the worse of two samples it cannot
     separate. That is the direction that flatters the headline, so we measured it: resolving ties
     the other way moves its delivered DockQ by <span id="lim-ties-shift">–</span>, far inside the
@@ -505,8 +518,9 @@ select {
     its own control.</li>
     <li><b>The cost-to-80% fit ran over 1..256 and now runs over 1..512</b>, and reports how much
     the answer depends on where the data stops.</li>
-    <li><b>The exclusion lists are gone.</b> The four targets we could not fold for device-memory
-    reasons, and the five whose pools were short, are all complete now. So is the data cut-off.</li>
+    <li><b>The exclusion lists are gone.</b> The four largest targets, which did not fit
+    until we fixed how long our own implementation held intermediate tensors alive, and the
+    five whose pools were short, are all complete now. So is the data cut-off.</li>
     <li><b>One correction to the panel itself.</b> Our completeness check counted label files
     rather than labels, and one cell of 656 carried a full set of scorer-error placeholders behind
     a well-formed file. It is fixed, rescored and included; the check now counts populated
@@ -515,28 +529,29 @@ select {
 
   <h3>Reproduce</h3>
   <ul>
-    <li><b>Models</b> — Boltz-2, OpenDDE-abag, Protenix-v2, ESMFold2 as shipped in tt-bio at
+    <li><b>Models</b>: Boltz-2, OpenDDE-abag, Protenix-v2, ESMFold2 as shipped in tt-bio at
     commit <span class="mono">6d352084c</span>, stock checkpoints, inference only.</li>
-    <li><b>Targets</b> — the AbAg-XM panel, 164 antibody–antigen complexes, 161 of them scorable,
+    <li><b>Targets</b>: the AbAg-XM panel, 164 antibody–antigen complexes, 161 of them scorable,
     each with an experimentally solved reference.</li>
-    <li><b>Depth and seeds</b> — 512 samples per target per model, run as eight 64-sample chunks.
+    <li><b>Depth and seeds</b>: 512 samples per target per model, run as eight 64-sample chunks.
     Base seed 40000 Boltz-2, 20000 OpenDDE-abag, 30000 Protenix-v2, 50000 ESMFold2; chunk
     <i>j</i> uses base + 1000·<i>j</i>, so the shallower rungs are exact prefixes of the deeper
     ones: the 512-sample pool is a strict superset of every rung below it.</li>
-    <li><b>Settings</b> — the three co-folders fold with MSAs served from a precomputed cache
+    <li><b>Settings</b>: the three co-folders fold with MSAs served from a precomputed cache
     (<span class="mono">--msa_cache_only --max_parallel_samples 5</span>, Boltz-2 8); ESMFold2 is
     single-sequence (<span class="mono">--single_sequence --recycling_steps 10 --sampling_steps
     100</span>); <span class="mono">--host_threads 8</span> throughout. Everything else as
     shipped by each model.</li>
-    <li><b>Hardware and cost</b> — one 32-chip Tenstorrent Wormhole Galaxy. Card-hours are
+    <li><b>Hardware and cost</b>: one 32-chip Tenstorrent Wormhole Galaxy. Card-hours are
     measured, not modelled: <span id="rep-cost">–</span> per sample.</li>
-    <li><b>Metrics</b> — DockQ against the reference, 0 to 1. <i>Epitope overlap</i> is the Jaccard
+    <li><b>Metrics</b>: DockQ against the reference, 0 to 1. <i>Epitope overlap</i> is the Jaccard
     index of predicted against true antigen contact residues. <i>Effective N</i> is where the
     best-of-k curve crosses the delivered level.</li>
-    <li><b>Run it</b> — <span class="mono">python3 analysis/build_insights.py -o
+    <li><b>Run it</b>: <span class="mono">python3 analysis/build_insights.py -o
     data/insights.json</span> rebuilds every number on this page from the per-sample table, one
-    row per structure with its DockQ, confidence and epitope labels. Publishing that table is a
-    separate decision; the aggregates this page reads are committed in
+    row per structure with its DockQ, confidence and epitope labels. That table is published in
+    full at <a href="https://huggingface.co/datasets/Tenstorrent/abag-xm">Tenstorrent/abag-xm</a>;
+    the aggregates this page reads are committed in
     <span class="mono">data/insights.json</span>.</li>
   </ul>
 
@@ -545,6 +560,32 @@ select {
   document</a>.</p>
   <p class="mono" id="stamp" style="color:var(--muted-2)"></p>
 </div>
+
+
+  <div class="notes">
+    <h2>What this is built on</h2>
+    <p>The result belongs as much to the people who released these models and tools. Every prediction
+    here was made by someone else's model, scored by someone else's metric, against structures
+    someone else solved and deposited.</p>
+    <ul>
+      <li><b>Boltz-2</b>, <a href="https://github.com/jwohlwend/boltz">jwohlwend/boltz</a>, MIT.</li>
+      <li><b>Protenix-v2</b>, <a href="https://github.com/bytedance/Protenix">bytedance/Protenix</a>,
+      Apache-2.0.</li>
+      <li><b>OpenDDE</b>,
+      <a href="https://huggingface.co/aurekaresearch/OpenDDE">aurekaresearch/OpenDDE</a>,
+      Apache-2.0.</li>
+      <li><b>ESMFold2</b>, <a href="https://huggingface.co/biohub/ESMFold2">biohub/ESMFold2</a>, MIT,
+      subject to the Biohub Acceptable Use Policy.</li>
+      <li><b>DockQ</b>, the scoring metric used throughout,
+      <a href="https://github.com/bjornwallner/DockQ">bjornwallner/DockQ</a>.</li>
+      <li><b>Reference structures</b> from the <a href="https://www.wwpdb.org/">Protein Data Bank</a>,
+      CC0. Please cite the original depositors of any structure you use.</li>
+      <li><b>Alignments</b> built from UniRef30 via
+      <a href="https://github.com/sokrypton/ColabFold">ColabFold</a>.</li>
+    </ul>
+    <p>All four models were run as shipped, on stock checkpoints, with each model's own default
+    settings. No model was tuned, retrained or recalibrated for this benchmark.</p>
+  </div>
 
   <div class="notes cite">
     <h2>How to cite</h2>
@@ -1227,9 +1268,9 @@ function drawConf() {
   });
   document.getElementById('lg-conf').innerHTML =
     `<span><i style="border:2px solid ${css('--muted')};background:none;border-radius:50%"></i>`
-    + `within one target — which sample is right</span>`
+    + `within one target: which sample is right</span>`
     + `<span><i style="background:${css('--muted')};border-radius:50%"></i>`
-    + `across targets — which target is easy</span>`;
+    + `across targets: which target is easy</span>`;
   table(document.getElementById('tb-conf'), ['model · score', 'within target', 'across targets'],
     rows.map(r => [LABEL[r.m] + ' · ' + FLL[r.fl], r.within.toFixed(3), r.across.toFixed(3)]));
 }
@@ -1796,7 +1837,7 @@ function fillTargets() {
   const keys = Object.keys(pool).sort((a, b) => gapOf(b) - gapOf(a));
   ts.innerHTML = '';
   keys.forEach(t => ts.add(new Option(
-    `${t}  —  best ${Math.max(...pool[t]).toFixed(2)}, delivered ${pool[t][0].toFixed(2)}`, t)));
+    `${t}  ·  best ${Math.max(...pool[t]).toFixed(2)}, delivered ${pool[t][0].toFixed(2)}`, t)));
   // Default to the median-gap target among the SOLVABLE ones (pool contains an acceptable
   // pose). That is the population the claim is about -- on a target nobody can solve there is
   // nothing for a selector to get right. Stated filter, not a hand-picked example.
