@@ -233,7 +233,7 @@ select {
 
 <div class="hero">
   <p class="kicker"><span id="k-samples">–</span> labelled samples · 4 models ·
-  161 antibody–antigen targets</p>
+  the 164-target <a href="https://arxiv.org/abs/2607.03787">2026ARK-AB</a> benchmark</p>
   <h1>Sampling scales. Selection does not.</h1>
   <p class="lede">Draw 512 structures for one antibody–antigen complex and the best of them keeps
   getting better, all the way to the cap. The one the model hands you stops improving after about
@@ -243,6 +243,12 @@ select {
   DockQ label, the confidence values, the reference structures and the alignments are on
   <a href="https://huggingface.co/datasets/Tenstorrent/abag-xm">Hugging Face</a> under CC-BY-4.0.
   Nothing on this page is derived from data we are holding back.</p>
+
+  <p class="datalink">The targets are not ours. They are
+  <a href="https://arxiv.org/abs/2607.03787"><b>2026ARK-AB</b></a>, the antibody-antigen benchmark
+  released with OpenDDE: 164 PDB targets, 404 interfaces, 159 clusters. What we added is 512
+  predictions per target from each of four models, every one scored against the experimental
+  structure. If you use this work, cite that benchmark too.</p>
 
   <div class="card">
     <div class="figwrap"><div id="c-lead"></div><div class="tip" id="tip-lead"></div></div>
