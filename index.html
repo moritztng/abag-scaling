@@ -464,48 +464,37 @@ select {
     average over a ragged panel. Two exclusions, neither of them missing data. Three of the 164
     targets (9ly2, 9ly3, 9lz2) are three-way antibody–antigen hetero-hexamers whose interface the
     DockQ scorer does not resolve in any model, so they carry no labels. One cell is dropped as a
-    <i>mis-fold</i>: OpenDDE-abag on 9sbb folds into a pTM 0.67–0.70 basin on the Galaxy against
-    0.91 for the same input refolded on Blackhole (DockQ 0.02 against 0.88 under the same scorer),
-    the only such case in a scan of 41 paired targets. Per model:
+    <i>mis-fold</i>: OpenDDE-abag on 9sbb lands in a pTM 0.67–0.70 basin against 0.91 for the same
+    input refolded, the only such case in a scan of 41 paired targets. Per model:
     <span id="lim-panel">–</span></li>
-    <li><b>Code provenance.</b> No cell was folded by tt-bio as it stands on main today; the
-    campaign ran one frozen engine tree so every cell is comparable.
-    <span id="lim-offtree">–</span> cells, on the four largest targets, needed memory fixes absent
-    from that tree and ran on two later trees, each cell entirely on one. Those fixes are bit-exact
-    at their own gates, but the trees are not byte-identical and we do not claim they are. Every
-    headline is computed with those cells in and out: the largest movement is
-    <b><span id="lim-leaveout">–</span></b>, and <span id="lim-leaveout-ok">–</span>. The later
-    tree's exact commit is not recoverable; its stamp was inherited when the tree was copied.</li>
-    <li><b>The oracle is an upper bound, not an achievable number.</b> It cannot leak into the
-    delivered number: the two curves share only the weighting, differ only in what they sort by,
-    and the one tie-break that touches both resolves <i>against</i> the selector, so every
-    delivered figure here is the conservative one.</li>
-    <li><b>Pooling checks.</b> Truncating each 512-sample pool to its first 256 reproduces our
-    published N=256 statistics exactly on 635 of the 643 analysed cells; the other 8 have no
-    complete 256 rung to nest against, so they are unchecked rather than failed. Every analysed
-    cell holds exactly <span id="lim-trunc">–</span> rows, and repeated structures within a pool:
-    <span id="lim-dup">–</span>.</li>
-    <li><b>Seeds are per model and per chunk, so they are shared across targets.</b> Independence
-    comes from the inputs differing, not the draws: the noise tensor is target-shaped, so no two
-    targets receive the same noise. The four models' seed blocks are pairwise disjoint.</li>
+    <li><b>Code provenance.</b> The campaign ran one frozen engine tree, so every cell is
+    comparable. <span id="lim-offtree">–</span> cells, on the four largest targets, needed
+    tensor-lifetime fixes absent from that tree and ran on later trees, each cell entirely on one.
+    Every headline is computed with those cells in and out: the largest movement is
+    <b><span id="lim-leaveout">–</span></b>, and <span id="lim-leaveout-ok">–</span>.</li>
+    <li><b>The oracle is an upper bound, not an achievable number</b>, and it cannot leak into the
+    delivered number: the two curves differ only in what they sort by, and the one tie-break that
+    touches both resolves against the selector.</li>
+    <li><b>Pooling checks.</b> Truncating each 512-sample pool to its first 256 reproduces the
+    earlier 256-sample round exactly on <span id="lim-trunc">–</span>; the rest have no complete
+    256 rung to nest against. Repeated structures within a pool: <span id="lim-dup">–</span>.
+    Seeds are per model and per chunk, so independence comes from the inputs differing rather than
+    the draws: the noise tensor is target-shaped, and the four models' seed blocks are disjoint.</li>
     <li><b>Epitope and CDR claims are quoted at their own depth, never at 512.</b> Those labels are
     partial, badly so for ESMFold2's CDR-H3. Mean samples labelled per target:
-    <span id="lim-depth-secondary">–</span>. Doubling the sample count did not double these.</li>
+    <span id="lim-depth-secondary">–</span></li>
     <li><b>One selector is stored on a coarse grid</b>: <span id="lim-ties">–</span>, so ties are
-    common, and our tie-break credits the selector with the worse of two samples it cannot
-    separate. That is the direction that flatters the headline, so we measured it: resolving ties
-    the other way moves its delivered DockQ by <span id="lim-ties-shift">–</span>, far inside the
-    interval.</li>
+    common, and our tie-break credits it with the worse of two samples it cannot separate. That is
+    the direction that flatters our headline, so we measured it: resolving ties the other way moves
+    its delivered DockQ by <span id="lim-ties-shift">–</span>, far inside the interval.</li>
     <li><b>Cost basis.</b> <span id="lim-wall">–</span> analysed samples carry no measured wall
-    time: their fleet record landed under the wrong rung label. The cost model takes a per-target
-    median, so three targets' cost rests on seven of their eight chunks.</li>
-    <li>Four specific models at specific settings. ESMFold2 runs single-sequence; OpenDDE-abag is
-    antibody-specialised, so its lead is not a general co-folding result.</li>
-    <li>This measures each model's own shipped confidence, not published rankers. The PAE-based
-    scores (pDockQ2, ipSAE, and AntiConf, which builds on pDockQ2) cannot be computed here at all:
-    PAE matrices were not written during the campaign. Learned rankers scoring structures directly
-    (DeepRank-Ab, ABAG-Rank) could have been run and were not, so whether one closes the gap is
-    untested.</li>
+    time, so the cost model takes a per-target median.</li>
+    <li><b>Four specific models at specific settings.</b> ESMFold2 runs single-sequence;
+    OpenDDE-abag is antibody-specialised, so its lead is not a general co-folding result. This
+    measures each model's own shipped confidence, not published rankers: the PAE-based scores
+    (pDockQ2, ipSAE, AntiConf) cannot be computed here because PAE matrices were not written during
+    the campaign, and learned rankers (DeepRank-Ab, ABAG-Rank) were not run, so whether one closes
+    the gap is untested.</li>
   </ul>
 
   <h3>What changed when we doubled the depth</h3>
