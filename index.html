@@ -276,19 +276,43 @@ select {
   </div>
 </div>
 
+<section id="deliv2">
+  <h2>What you actually get stops improving.</h2>
+  <p>What confidence ranks first, out of <i>k</i> drawn, rises to about <i>k</i> = 32 and then goes
+  flat. Over 32 draws to 512, <span id="d-zero32">–</span>.</p>
+  <div class="card">
+    <div class="figwrap"><div id="c-deliv2"></div><div class="tip" id="tip-deliv2"></div></div>
+    <div class="legend" id="lg-deliv2"></div>
+    <p class="foot">Measured against each model's own single draw, so the axis reads as what
+    drawing more bought. Band = 95% paired bootstrap on the delivered gain; the table is
+    delivered(512) − delivered(<i>k</i>).</p>
+    <div id="tb-deliv2"></div>
+  </div>
+</section>
+
+<section id="gap">
+  <h2>The ceiling keeps rising, so the gap keeps widening.</h2>
+  <p>The ceiling gains <b><span id="g-perdbl">–</span> DockQ per doubling</b>, a rate unchanged
+  from 64→128 to 256→512, so nothing saturates inside the measured range. The gap is
+  <b><span id="gapwiden">–</span> DockQ wider at 512 samples than at 16</b>, every interval
+  excluding zero.</p>
+  <div class="card">
+    <div class="ctl">
+      <div class="seg" id="metric-seg"></div>
+    </div>
+    <div class="figwrap"><div id="c-gap"></div><div class="tip" id="tip-gap"></div></div>
+    <div class="legend" id="lg-gap"></div>
+    <p class="foot">Correcting the shallower 256-sample round, which showed no knee: the <i>second
+    difference</i> of the gap is negative with an interval excluding zero for
+    <span id="g-knee">–</span>, so the widening decelerates slightly there. Because the ceiling's
+    gain per doubling is flat, that deceleration is the delivered line ticking up inside its own
+    noise, not the ceiling bending.</p>
+    <div id="tb-gap"></div>
+  </div>
+</section>
+
 <section id="why">
   <h2>Why: confidence stops ranking exactly where it is used.</h2>
-  <p>Restrict the correlation between confidence and accuracy to the top tail a selector actually
-  picks from and it collapses to <b><span id="w-tail">–</span></b>. For OpenDDE-abag it
-  <b>inverts</b>: inside its own top quartile, higher confidence means a worse structure. A
-  <b>random</b> subset of the same size holds the whole-pool correlation, so that correlation is
-  carried <b>entirely by samples no selector will ever pick</b>.</p>
-  <div class="card">
-    <div class="figwrap"><div id="c-tail"></div><div class="tip" id="tip-tail"></div></div>
-    <div class="legend" id="lg-tail"></div>
-    <p class="foot" id="tail-foot"></p>
-    <div id="tb-tail"></div>
-  </div>
   <p>The same score, correlated two ways. Across targets it works: a model knows which complexes
   it will fold well. Within one target's 512 samples it is near zero,
   <span class="mono">ipTM</span> included.</p>
@@ -300,10 +324,62 @@ select {
     their <span class="mono">confidence_score</span>.</p>
     <div id="tb-conf"></div>
   </div>
+  <p>Restrict the correlation between confidence and accuracy to the top tail a selector actually
+  picks from and it collapses to <b><span id="w-tail">–</span></b>. For OpenDDE-abag it
+  <b>inverts</b>: inside its own top quartile, higher confidence means a worse structure. A
+  <b>random</b> subset of the same size holds the whole-pool correlation, so that correlation is
+  carried <b>entirely by samples no selector will ever pick</b>.</p>
+  <div class="card">
+    <div class="figwrap"><div id="c-tail"></div><div class="tip" id="tip-tail"></div></div>
+    <div class="legend" id="lg-tail"></div>
+    <p class="foot" id="tail-foot"></p>
+    <div id="tb-tail"></div>
+  </div>
+</section>
+
+<section id="beat">
+  <h2>We tried to beat it. Nothing did.</h2>
+  <p>Six alternative selectors, fixed in advance, each built only from numbers a model already
+  returns. The bar, set before running them: beat the shipped selector with an interval excluding
+  zero on two of the four models. <b>Every one lands level with it or worse.</b></p>
+  <div class="card">
+    <div class="figwrap"><div id="c-beat"></div><div class="tip" id="tip-beat"></div></div>
+    <div class="legend" id="lg-beat"></div>
+    <p class="foot">Combinations average each sample's rank under the listed scores. Structural
+    consensus, ranking samples by agreement with the pool's modal pose, needs the structures
+    themselves and is not tested here.</p>
+  </div>
+</section>
+
+<section id="law">
+  <h2>Effective N does not grow with N.</h2>
+  <p>Effective N is the draws a perfect chooser would have needed to match what the model delivers
+  from <i>N</i>. Across a 256-fold range it stays between <b><span id="law-range">–</span></b>, a
+  fitted slope of <b><span id="law-b">–</span></b> against 0 for flat, so the share of your draws
+  that reaches you is <b><span id="law-eff">–</span></b> at N = 512.</p>
+  <div class="card">
+    <div class="figwrap"><div id="c-law"></div><div class="tip" id="tip-law"></div></div>
+    <div class="legend" id="lg-law"></div>
+    <p class="foot" id="law-foot"></p>
+    <div id="tb-law"></div>
+  </div>
+</section>
+
+<section id="cost">
+  <h2>What it would cost to get there by sampling alone.</h2>
+  <p>Extrapolate the ceiling's trend to where 80% of targets carry an acceptable pose. Solid is
+  MEASURED to 512; past the rule everything is <b>DERIVED</b> from a log-linear fit assuming no
+  ceiling. Fitted counts: <b><span id="c-need">–</span></b>.</p>
+  <div class="card">
+    <div class="figwrap"><div id="c-cost"></div><div class="tip" id="tip-cost"></div></div>
+    <div class="legend" id="lg-cost"></div>
+    <p class="foot" id="cost-foot"></p>
+    <div id="tb-cost"></div>
+  </div>
 </section>
 
 <section id="pareto">
-  <h2>Spend compute on different models, not on more samples.</h2>
+  <h2>Spreading compute across models beats more samples, in principle.</h2>
   <p>Same card-hours per target, split four ways instead of poured into one model. From 0.08
   card-hours the split beats every single model at the same spend, including the antibody
   specialist (<span id="pw-od">–</span> more targets solved, paired 95% interval excluding zero),
@@ -340,20 +416,6 @@ select {
   </div>
 </section>
 
-<section id="beat">
-  <h2>We tried to beat it. Nothing did.</h2>
-  <p>Six alternative selectors, fixed in advance, each built only from numbers a model already
-  returns. The bar, set before running them: beat the shipped selector with an interval excluding
-  zero on two of the four models. <b>Every one lands level with it or worse.</b></p>
-  <div class="card">
-    <div class="figwrap"><div id="c-beat"></div><div class="tip" id="tip-beat"></div></div>
-    <div class="legend" id="lg-beat"></div>
-    <p class="foot">Combinations average each sample's rank under the listed scores. Structural
-    consensus, ranking samples by agreement with the pool's modal pose, needs the structures
-    themselves and is not tested here.</p>
-  </div>
-</section>
-
 <section id="explore">
   <h2>Look at one target.</h2>
   <p>One real 64-sample fold. Each mark is a structure, ordered by the model's own confidence.
@@ -367,68 +429,6 @@ select {
     <div class="figwrap"><div id="c-explore"></div><div class="tip" id="tip-explore"></div></div>
     <div class="readout" id="ex-read"></div>
     <p class="foot" id="ex-note"></p>
-  </div>
-</section>
-
-<section id="law">
-  <h2>Effective N does not grow with N.</h2>
-  <p>Effective N is the draws a perfect chooser would have needed to match what the model delivers
-  from <i>N</i>. Across a 256-fold range it stays between <b><span id="law-range">–</span></b>, a
-  fitted slope of <b><span id="law-b">–</span></b> against 0 for flat, so the share of your draws
-  that reaches you is <b><span id="law-eff">–</span></b> at N = 512.</p>
-  <div class="card">
-    <div class="figwrap"><div id="c-law"></div><div class="tip" id="tip-law"></div></div>
-    <div class="legend" id="lg-law"></div>
-    <p class="foot" id="law-foot"></p>
-    <div id="tb-law"></div>
-  </div>
-</section>
-
-<section id="gap">
-  <h2>The ceiling keeps rising, so the gap keeps widening.</h2>
-  <p>The ceiling gains <b><span id="g-perdbl">–</span> DockQ per doubling</b>, a rate unchanged
-  from 64→128 to 256→512, so nothing saturates inside the measured range. The gap is
-  <b><span id="gapwiden">–</span> DockQ wider at 512 samples than at 16</b>, every interval
-  excluding zero.</p>
-  <div class="card">
-    <div class="ctl">
-      <div class="seg" id="metric-seg"></div>
-    </div>
-    <div class="figwrap"><div id="c-gap"></div><div class="tip" id="tip-gap"></div></div>
-    <div class="legend" id="lg-gap"></div>
-    <p class="foot">Correcting the shallower 256-sample round, which showed no knee: the <i>second
-    difference</i> of the gap is negative with an interval excluding zero for
-    <span id="g-knee">–</span>, so the widening decelerates slightly there. Because the ceiling's
-    gain per doubling is flat, that deceleration is the delivered line ticking up inside its own
-    noise, not the ceiling bending.</p>
-    <div id="tb-gap"></div>
-  </div>
-</section>
-
-<section id="deliv2">
-  <h2>What you actually get stops improving.</h2>
-  <p>What confidence ranks first, out of <i>k</i> drawn, rises to about <i>k</i> = 32 and then goes
-  flat. Over 32 draws to 512, <span id="d-zero32">–</span>.</p>
-  <div class="card">
-    <div class="figwrap"><div id="c-deliv2"></div><div class="tip" id="tip-deliv2"></div></div>
-    <div class="legend" id="lg-deliv2"></div>
-    <p class="foot">Measured against each model's own single draw, so the axis reads as what
-    drawing more bought. Band = 95% paired bootstrap on the delivered gain; the table is
-    delivered(512) − delivered(<i>k</i>).</p>
-    <div id="tb-deliv2"></div>
-  </div>
-</section>
-
-<section id="cost">
-  <h2>What it would cost to get there by sampling alone.</h2>
-  <p>Extrapolate the ceiling's trend to where 80% of targets carry an acceptable pose. Solid is
-  MEASURED to 512; past the rule everything is <b>DERIVED</b> from a log-linear fit assuming no
-  ceiling. Fitted counts: <b><span id="c-need">–</span></b>.</p>
-  <div class="card">
-    <div class="figwrap"><div id="c-cost"></div><div class="tip" id="tip-cost"></div></div>
-    <div class="legend" id="lg-cost"></div>
-    <p class="foot" id="cost-foot"></p>
-    <div id="tb-cost"></div>
   </div>
 </section>
 
