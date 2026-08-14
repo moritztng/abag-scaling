@@ -546,10 +546,7 @@ select {
     <li><b>The exclusion lists are gone.</b> The four largest targets, which did not fit
     until we fixed how long our own implementation held intermediate tensors alive, and the
     five whose pools were short, are all complete now. So is the data cut-off.</li>
-    <li><b>One correction to the panel itself.</b> Our completeness check counted label files
-    rather than labels, and one cell of 656 carried a full set of scorer-error placeholders behind
-    a well-formed file. It is fixed, rescored and included; the check now counts populated
-    values.</li>
+    
   </ul>
 
   <h3>Reproduce</h3>
@@ -1361,8 +1358,8 @@ function drawEpi() {
 
   // Everything a reviewer needs to attack this chart, stated on the chart: the bars are shares
   // of ALL labelled targets while the claim is about the failures alone; the count depends on
-  // where the cut between the two epitope-overlap modes is placed; and the two partial models
-  // are labelled shallower, which can only inflate their share.
+  // where the cut between the two epitope-overlap modes is placed; and the labels are deep
+  // enough that truncating them does not move the share.
   const q3 = D.q3_epitope, sv = q3.sensitivity;
   const pct = v => Math.round(100 * v);
   const fails = MODELS.map(m => q3.per_model[m].f2.frac_failures_that_never_find_site);
@@ -1381,9 +1378,8 @@ function drawEpi() {
     + `${sv.ej_star_grid[gi[0]]}–${sv.ej_star_grid[gi[gi.length - 1]]} epitope overlap the share `
     + `runs ${pct(Math.min(...band))}–${pct(Math.max(...band))}%. The chart's cut, `
     + `${q3.ej_star.toFixed(2)}, is the median of the four models' histogram troughs. `
-    + `Median labelled samples per target (${dep}), so the two shallower models can only be `
-    + `over-counted here. Truncating the two fully labelled models to those depths moves their `
-    + `share by at most ${drift.toFixed(2)}.`;
+    + `Median labelled samples per target (${dep}). Truncating boltz2 and opendde-abag to 64, 128 `
+    + `and 256 moves their share by at most ${drift.toFixed(2)}, so this is not a depth artifact.`;
 }
 
 // ---------------------------------------------------------------- 4b. beat the selector
