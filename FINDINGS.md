@@ -37,7 +37,7 @@ the correct tree (512/512 DockQ, chain map A:A / L:C / H:B, iRMSD populated) and
 The census now counts populated values: across all 656 cells, **zero partial cells, zero short
 cells, zero placeholders, zero repeated structures**.
 
-**There is no data cut-off any more.** Every chunk the first release excluded as post-cut-off, as
+**There is no data cut-off any more.** Every chunk the earlier 256-sample round excluded as post-cut-off, as
 a tensor-lifetime failure in our own implementation, or as a short pool is folded, scored and included.
 
 Reproduce every number:
@@ -47,7 +47,7 @@ python3 analysis/build_insights.py -o data/insights.json
 python3 analysis/summarise.py data/insights.json
 ```
 
-Inputs: `~/abag_xm/deepn/dataset_n512/{model}_samples.parquet` and
+Inputs: `~/abag_xm/deepn/dataset_n512_repaired/{model}_samples.parquet` and
 `~/abag_xm/deepn/galaxy/fleet_results.jsonl`. Nothing is fabricated, hand-entered or carried
 over from a previous document.
 
@@ -537,7 +537,7 @@ for the N at which 80% of targets carry a pose at the bar.
 **The saturating family is degenerate for three of the four models' oracle-DockQ curves and for
 all four threshold-fraction curves**: bounded by the physical ceiling it walks its asymptote to 1.0
 and collapses into the log fit, returning no finite N. Only opendde-abag's oracle-DockQ curve
-admits a non-degenerate saturating fit (a = 0.867, alpha = 0.062). So the first release's statement
+admits a non-degenerate saturating fit (a = 0.867, alpha = 0.062). So the earlier 256-sample round's statement
 "at N ≤ 256 the curves carry no evidence of saturation" is superseded by a narrower and
 better-supported one: **within a measured range now twice as long, the threshold-fraction curves
 still admit no saturating fit.**
@@ -604,7 +604,7 @@ different samples from the pool, and no available signal tells you which.
   | esmfold2 | 161 |, |
 
   The four large-target exclusions (9i3p, 9ivj, 9j4c, 9q7y), which did not fit until we fixed how long our implementation held intermediate tensors alive, and the five short pools (9ua5, 9rye,
-  9gvn, 9xqn, 9d73) that the first release carried are **gone**: every one of them folds and scores.
+  9gvn, 9xqn, 9d73) that the earlier 256-sample round carried are **gone**: every one of them folds and scores.
 
 - **One exclusion remains, opendde-abag/9sbb**, as a p2-era pipeline mis-fold: the Galaxy samples
   sit in a pTM 0.668-0.697 basin while the same input refolded on qb1 reaches ~0.91, giving DockQ
