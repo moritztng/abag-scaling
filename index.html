@@ -523,32 +523,6 @@ select {
     the gap is untested.</li>
   </ul>
 
-  <h3>What changed when we doubled the depth</h3>
-  <p>An earlier round of this analysis ran to 256 samples per target. It was never published. This
-  page is the first release, and it runs to 512 on a complete panel. Three conclusions from the
-  shallower round did not survive, and we are listing them because the ones that did survive should
-  be read knowing that.</p>
-  <ul>
-    <li><b>"Effective N is 1 to 3 samples" is not the headline</b>, only one reading of a
-    flatter fact: effective N does not grow with N at all, so selection efficiency falls as 1/N.
-    The number is still there, as one point on a law.</li>
-    <li><b>"No knee at 512" did not hold.</b> The gap's second difference is negative with an
-    interval excluding zero in two of the four models. The ceiling itself still shows no
-    saturation.</li>
-    <li><b>"Delivered quality declines with N for OpenDDE-abag" did not hold as a headline.</b>
-    We pre-registered that test at k = 8 and it came back −0.0072 [−0.0148, +0.0006], crossing
-    zero; the findings document reports it with its interval. The intervals at k = 16 and k = 32 do exclude zero and
-    we are deliberately not promoting them: moving to whichever k clears the bar is the exact error
-    the pre-registration exists to prevent. The tail inversion above replaces it, measured against
-    its own control.</li>
-    <li><b>The cost-to-80% fit ran over 1..256 and now runs over 1..512</b>, and reports how much
-    the answer depends on where the data stops.</li>
-    <li><b>The exclusion lists are gone.</b> The four largest targets, which did not fit
-    until we fixed how long our own implementation held intermediate tensors alive, and the
-    five whose pools were short, are all complete now. So is the data cut-off.</li>
-    
-  </ul>
-
   <h3>Reproduce</h3>
   <ul>
     <li><b>Models</b>: Boltz-2, OpenDDE-abag, Protenix-v2, ESMFold2 as shipped in TT-Bio at
