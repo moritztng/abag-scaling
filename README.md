@@ -1,6 +1,9 @@
 # abag-scaling
 
-<img src="assets/tt-logo.png" alt="Tenstorrent" height="28">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/tt-logo.png">
+  <img src="assets/tt-logo-onlight.png" alt="Tenstorrent" height="28">
+</picture>
 
 Sampling scales. Selection does not.
 
@@ -68,7 +71,10 @@ Nothing on the page is typed in by hand; it is all read from `data/insights.json
 
 ## Computed on Tenstorrent
 
-![Tenstorrent](assets/tt-logo.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/tt-logo.png">
+  <img src="assets/tt-logo-onlight.png" alt="Tenstorrent" height="30">
+</picture>
 
 All 335,360 folds ran on Tenstorrent hardware, a 32-chip Wormhole Galaxy, using
 **[tt-bio](https://github.com/moritztng/tt-bio)**, our open-source stack for running structure
