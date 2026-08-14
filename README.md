@@ -1,5 +1,7 @@
 # abag-scaling
 
+<img src="assets/tt-logo.png" alt="Tenstorrent" height="28">
+
 Sampling scales. Selection does not.
 
 An interactive page on what 329,216 DockQ-labelled samples say about scaling the number of generated
@@ -64,4 +66,11 @@ Nothing on the page is typed in by hand; it is all read from `data/insights.json
 }
 ```
 
-Computed on Tenstorrent hardware with [tt-bio](https://github.com/moritztng/tt-bio).
+## Computed on Tenstorrent
+
+![Tenstorrent](assets/tt-logo.png)
+
+All 335,360 folds ran on Tenstorrent hardware, a 32-chip Wormhole Galaxy, using
+**[tt-bio](https://github.com/moritztng/tt-bio)**, our open-source stack for running structure
+prediction models on Tenstorrent. At this scale cost per prediction is what decides whether a study
+like this is affordable at all.
