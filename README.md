@@ -1,9 +1,6 @@
 # abag-scaling
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/tt-logo.png">
-  <img src="assets/tt-logo-onlight.png" alt="Tenstorrent" height="28">
-</picture>
+<a href="https://tenstorrent.com"><img src="assets/tt-logo-card.png" alt="Tenstorrent" height="34"></a>
 
 Sampling scales. Selection does not.
 
@@ -71,12 +68,9 @@ Nothing on the page is typed in by hand; it is all read from `data/insights.json
 
 ## Computed on Tenstorrent
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/tt-logo.png">
-  <img src="assets/tt-logo-onlight.png" alt="Tenstorrent" height="30">
-</picture>
+<a href="https://tenstorrent.com"><img src="assets/tt-logo-card.png" alt="Tenstorrent" height="38"></a>
 
-All 335,360 folds ran on Tenstorrent hardware, a 32-chip Wormhole Galaxy, using
+All 335,360 folds ran on [Tenstorrent](https://tenstorrent.com) hardware, a 32-chip Wormhole Galaxy, using
 **[TT-Bio](https://github.com/moritztng/tt-bio)**, our open-source stack for running structure
 prediction models on Tenstorrent. At this scale cost per prediction is what decides whether a study
 like this is affordable at all.

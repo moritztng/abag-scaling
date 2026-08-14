@@ -224,6 +224,7 @@ select {
     margin: 0 0 30px;
   }
   .brandbar img { height: 30px; width: auto; display: block; }
+  .brandbar a { display: inline-flex; align-items: center; }
   .brandbar span { color: var(--muted); font-size: 13.5px; }
   .brandbar .on-dark { display: none; }
   @media (prefers-color-scheme: dark) {
@@ -250,9 +251,11 @@ select {
 
 <div class="hero">
   <div class="brandbar">
-    <img class="on-light" src="assets/tt-logo-light.svg" alt="Tenstorrent">
-    <img class="on-dark" src="assets/tt-logo.png" alt="Tenstorrent">
-    <span>Computed on Tenstorrent using
+    <a href="https://tenstorrent.com" aria-label="Tenstorrent">
+      <img class="on-light" src="assets/tt-logo-light.svg" alt="Tenstorrent">
+      <img class="on-dark" src="assets/tt-logo.png" alt="Tenstorrent">
+    </a>
+    <span>Computed on <a href="https://tenstorrent.com">Tenstorrent</a> using
     <a href="https://github.com/moritztng/tt-bio">TT-Bio</a></span>
   </div>
   <p class="kicker"><span id="k-samples">–</span> labelled samples · 4 models ·
