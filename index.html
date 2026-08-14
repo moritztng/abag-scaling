@@ -405,6 +405,13 @@ select {
 
 <section id="epi">
   <h2>Most failures never find the epitope.</h2>
+  <p class="datalink"><b>Correction in progress, 2026-08-14.</b> Four targets (9kwy, 9ull, 9ulm,
+  9ynx) carry an epitope overlap of 0.000 that is a scorer artifact, not a measurement: where the
+  native antigen chain does not resolve, the scorer wrote zero instead of leaving the value empty.
+  It is visible in the data, since one of those cells pairs a DockQ of 0.984 with an epitope overlap
+  of 0.000, which is not possible. Those 16 model-target cells inflate this section's numbers and
+  are being recomputed. Everything else on this page is unaffected: no other section uses epitope
+  overlap.</p>
   <p>The epitope is the patch on the antigen the antibody binds. On a target a model fails, its
   best sample overlaps the true epitope by a median of <b><span id="epi-uns">–</span></b>, against
   <b><span id="epi-sol">–</span></b> on one it solves. Two clean modes, almost nothing between:
